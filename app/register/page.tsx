@@ -1,0 +1,308 @@
+"use client"
+
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Eye, EyeOff, Home, Loader2, Shield, Sparkles, Users } from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import type React from "react"
+import { useState } from "react"
+
+export default function RegisterPage() {
+  const router = useRouter()
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    userType: "student", // 'student' ou 'landlord'
+  })
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleRadioChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, userType: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    // Simulação de cadastro com delay para mostrar o loading
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      router.push("/feed")
+    } catch (error) {
+      console.error("Registration failed:", error)
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-grid-slate-200/60 dark:bg-grid-slate-700/25 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:[mask-image:linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.5))]" />
+
+      {/* Floating Elements */}
+      <div className="absolute top-20 right-20 w-72 h-72 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-20 left-20 w-96 h-96 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
+      <div className="absolute top-1/2 right-1/2 transform translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-indigo-400/10 to-purple-400/10 rounded-full blur-2xl animate-pulse delay-500" />
+
+      <div className="flex min-h-screen relative z-10">
+        {/* Left side - Hero Section */}
+        <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12">
+          <div className="max-w-lg text-center">
+            {/* Logo */}
+            <div className="mb-12">
+              <div className="inline-flex items-center gap-3 mb-6">
+                <div className="p-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl shadow-lg">
+                  <Home className="w-8 h-8 text-white" />
+                </div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  UniHome
+                </h1>
+              </div>
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-200 mb-4">
+                  Junte-se à nossa comunidade!
+                </h2>
+                <p className="text-lg text-slate-600 dark:text-slate-300">
+                  Crie sua conta e comece a encontrar o lar ideal hoje mesmo
+                </p>
+              </div>
+            </div>
+
+            {/* Features */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-6 p-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl">
+                <div className="p-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold text-slate-800 dark:text-slate-200">Comunidade Ativa</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm">Milhares de estudantes e proprietários</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-6 p-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl">
+                <div className="p-4 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl">
+                  <Shield className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold text-slate-800 dark:text-slate-200">Seguro e Confiável</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm">Perfis verificados e transações seguras</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-6 p-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl">
+                <div className="p-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold text-slate-800 dark:text-slate-200">Fácil de Usar</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm">Interface intuitiva e moderna</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right side - Form */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+          <div className="absolute top-6 right-6">
+            <ThemeToggle />
+          </div>
+
+          <div className="w-full max-w-md">
+            {/* Mobile Logo */}
+            <div className="lg:hidden mb-8 text-center">
+              <div className="inline-flex items-center gap-3 mb-4">
+                <div className="p-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl">
+                  <Home className="w-6 h-6 text-white" />
+                </div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  UniHome
+                </h1>
+              </div>
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-2">
+                  Junte-se à nossa comunidade!
+                </h2>
+                <p className="text-slate-600 dark:text-slate-300">
+                  Crie sua conta e comece a encontrar o lar ideal hoje mesmo
+                </p>
+              </div>
+            </div>
+
+            <Card className="border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl">
+              <CardHeader className="text-center pb-8 pt-10">
+                <CardTitle className="text-3xl font-bold text-slate-800 dark:text-slate-200 mb-2">
+                  Criar conta
+                </CardTitle>
+                <CardDescription className="text-lg text-slate-600 dark:text-slate-400">
+                  Cadastre-se para encontrar o imóvel ideal
+                </CardDescription>
+              </CardHeader>
+
+              <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-6 px-10">
+                  <div className="space-y-3">
+                    <Label htmlFor="name" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      Nome completo
+                    </Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      placeholder="Seu nome completo"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      disabled={isLoading}
+                      className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label htmlFor="email" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      Email
+                    </Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      disabled={isLoading}
+                      className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label htmlFor="password" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      Senha
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        disabled={isLoading}
+                        className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 pr-14"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-2 h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700"
+                        onClick={() => setShowPassword(!showPassword)}
+                        disabled={isLoading}
+                      >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label
+                      htmlFor="confirmPassword"
+                      className="text-sm font-semibold text-slate-700 dark:text-slate-300"
+                    >
+                      Confirmar senha
+                    </Label>
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      required
+                      disabled={isLoading}
+                      className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Você é:</Label>
+                    <RadioGroup
+                      value={formData.userType}
+                      onValueChange={handleRadioChange}
+                      className="grid grid-cols-2 gap-4"
+                      disabled={isLoading}
+                    >
+                      <div className="flex items-center space-x-3 p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white/30 dark:bg-slate-900/30 backdrop-blur-sm hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
+                        <RadioGroupItem value="student" id="student" disabled={isLoading} className="text-purple-600" />
+                        <Label
+                          htmlFor="student"
+                          className="font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                        >
+                          Estudante
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-3 p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white/30 dark:bg-slate-900/30 backdrop-blur-sm hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
+                        <RadioGroupItem
+                          value="landlord"
+                          id="landlord"
+                          disabled={isLoading}
+                          className="text-purple-600"
+                        />
+                        <Label
+                          htmlFor="landlord"
+                          className="font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                        >
+                          Locador
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="flex flex-col space-y-6 px-10 pb-10">
+                  <Button
+                    type="submit"
+                    className="w-full h-14 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-3">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Cadastrando...</span>
+                      </div>
+                    ) : (
+                      "Cadastrar"
+                    )}
+                  </Button>
+
+                  <div className="text-center">
+                    <span className="text-slate-600 dark:text-slate-400">Já tem uma conta? </span>
+                    <Link
+                      href="/login"
+                      className={`font-semibold text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors ${isLoading ? "pointer-events-none" : ""}`}
+                    >
+                      Entrar
+                    </Link>
+                  </div>
+                </CardFooter>
+              </form>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
