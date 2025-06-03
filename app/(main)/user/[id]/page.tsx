@@ -56,7 +56,11 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
         )
       case "pending":
         return (
-          <Button variant="outline" disabled className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            disabled
+            className="flex items-center gap-2 bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-300"
+          >
             <Clock size={18} />
             Solicitação enviada
           </Button>

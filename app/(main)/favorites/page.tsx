@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useFavorites } from "@/hooks/use-favorites"
-import PropertyCard from "../feed/property-card"
 import { Button } from "@/components/ui/button"
+import { useFavorites } from "@/hooks/use-favorites"
+import { Frown, Heart, Search } from "lucide-react"
 import Link from "next/link"
-import { Heart, Search } from "lucide-react"
+import { useEffect, useState } from "react"
+import PropertyCard from "../feed/property-card"
 
 // Dados simulados de propriedades (mesmo do feed)
 const properties = [
@@ -20,7 +20,7 @@ const properties = [
     bedrooms: 2,
     bathrooms: 1,
     area: 65,
-    images: ["/placeholder.svg?height=300&width=500"],
+    images: ['/images/apartment1.png'],
     features: ["Mobiliado", "Internet", "Lavanderia"],
     type: "Apartamento",
   },
@@ -35,7 +35,7 @@ const properties = [
     bedrooms: 1,
     bathrooms: 1,
     area: 30,
-    images: ["/placeholder.svg?height=300&width=500"],
+    images: ['/images/apartment1.png'],
     features: ["Mobiliado", "Segurança 24h", "Academia"],
     type: "Kitnet",
   },
@@ -50,7 +50,7 @@ const properties = [
     bedrooms: 1,
     bathrooms: 2,
     area: 20,
-    images: ["/placeholder.svg?height=300&width=500"],
+    images: ['/images/apartment1.png'],
     features: ["Quarto individual", "Cozinha compartilhada", "Área de estudos"],
     type: "Quarto",
   },
@@ -65,7 +65,7 @@ const properties = [
     bedrooms: 3,
     bathrooms: 2,
     area: 90,
-    images: ["/placeholder.svg?height=300&width=500"],
+    images: ['/images/apartment1.png'],
     features: ["Varanda", "Garagem", "Área de lazer"],
     type: "Apartamento",
   },
@@ -80,7 +80,7 @@ const properties = [
     bedrooms: 1,
     bathrooms: 1,
     area: 40,
-    images: ["/placeholder.svg?height=300&width=500"],
+    images: ['/images/apartment1.png'],
     features: ["Mobiliado", "Portaria 24h", "Academia"],
     type: "Studio",
   },
@@ -95,7 +95,7 @@ const properties = [
     bedrooms: 1,
     bathrooms: 2,
     area: 15,
-    images: ["/placeholder.svg?height=300&width=500"],
+    images: ['/images/apartment1.png'],
     features: ["Internet", "Limpeza semanal", "Área comum"],
     type: "Quarto",
   },
@@ -115,7 +115,10 @@ export default function FavoritesPage() {
   return (
     <div className="container py-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Meus Favoritos</h1>
+        <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
+          <Heart className="h-8 w-8 text-blue-500" />
+          Meus Favoritos
+        </h1>
         <p className="text-muted-foreground">Imóveis que você salvou para ver mais tarde</p>
       </div>
 
@@ -128,7 +131,7 @@ export default function FavoritesPage() {
       ) : (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="bg-muted/30 p-4 rounded-full mb-4">
-            <Heart className="h-12 w-12 text-muted-foreground" />
+            <Frown className="h-12 w-12 text-muted-foreground" />
           </div>
           <h2 className="text-xl font-semibold mb-2">Você ainda não tem favoritos</h2>
           <p className="text-muted-foreground max-w-md mb-6">
@@ -136,7 +139,7 @@ export default function FavoritesPage() {
             facilmente mais tarde.
           </p>
           <Link href="/feed">
-            <Button className="flex items-center gap-2">
+            <Button className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white">
               <Search size={16} />
               Explorar imóveis
             </Button>

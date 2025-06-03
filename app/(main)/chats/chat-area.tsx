@@ -2,14 +2,14 @@
 
 import type React from "react"
 
-import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Menu, Send } from "lucide-react"
-import type { Contact, Message } from "./types"
-import { cn } from "@/lib/utils"
 import { useMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
+import { Menu, Send } from "lucide-react"
+import { useState } from "react"
+import type { Contact, Message } from "./types"
 
 // Dados de exemplo
 const mockMessages: Record<string, Message[]> = {
@@ -163,7 +163,7 @@ export function ChatArea({ activeContact, setIsMobileSidebarOpen }: ChatAreaProp
     return (
       <div className="flex-1 flex items-center justify-center bg-accent/20">
         <div className="text-center p-8">
-          <h3 className="text-2xl font-semibold mb-2">Bem-vindo ao Chat</h3>
+          <h3 className="text-2xl font-semibold mb-2">Suas Conversas</h3>
           <p className="text-muted-foreground">Selecione uma conversa para começar a enviar mensagens</p>
           {isMobile && (
             <Button className="mt-4" onClick={() => setIsMobileSidebarOpen(true)}>
@@ -204,7 +204,7 @@ export function ChatArea({ activeContact, setIsMobileSidebarOpen }: ChatAreaProp
               className={cn(
                 "max-w-[80%] md:max-w-[70%] rounded-lg p-3",
                 message.isMe
-                  ? "bg-primary text-primary-foreground rounded-br-none"
+                  ? "bg-blue-500 text-white rounded-br-none dark:bg-blue-500 dark:text-white"
                   : "bg-background border rounded-bl-none",
               )}
             >
@@ -227,7 +227,12 @@ export function ChatArea({ activeContact, setIsMobileSidebarOpen }: ChatAreaProp
             onChange={(e) => setNewMessage(e.target.value)}
             className="flex-1"
           />
-          <Button type="submit" size="icon" disabled={!newMessage.trim()}>
+          <Button
+            type="submit"
+            size="icon"
+            disabled={!newMessage.trim()}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+          >
             <Send className="h-5 w-5" />
           </Button>
         </form>

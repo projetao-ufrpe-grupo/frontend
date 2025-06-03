@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useMobile } from "@/hooks/use-mobile"
-import { Building2, Heart, Home, LogOut, Menu, MessageSquare, PlusCircle, User } from "lucide-react"
+import { BookPlus, Building2, Heart, Home, LogOut, Menu, MessageSquare, User } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -32,7 +32,11 @@ export default function Navbar() {
       <Link href="/feed">
         <Button
           variant={pathname === "/feed" ? "default" : "ghost"}
-          className="flex gap-3 h-12 px-6 rounded-2xl font-medium transition-all duration-200 hover:scale-105"
+          className={`flex gap-3 h-12 px-6 rounded-2xl font-medium transition-all duration-200 hover:scale-105 ${
+            pathname === "/feed"
+              ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+              : ""
+          }`}
         >
           <Home size={20} />
           {!isMobile && "Início"}
@@ -41,7 +45,11 @@ export default function Navbar() {
       <Link href="/favorites">
         <Button
           variant={pathname === "/favorites" ? "default" : "ghost"}
-          className="flex gap-3 h-12 px-6 rounded-2xl font-medium transition-all duration-200 hover:scale-105"
+          className={`flex gap-3 h-12 px-6 rounded-2xl font-medium transition-all duration-200 hover:scale-105 ${
+            pathname === "/favorites"
+              ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+              : ""
+          }`}
         >
           <Heart size={20} />
           {!isMobile && "Favoritos"}
@@ -50,7 +58,11 @@ export default function Navbar() {
       <Link href="/chats">
         <Button
           variant={pathname === "/chats" ? "default" : "ghost"}
-          className="flex gap-3 h-12 px-6 rounded-2xl font-medium transition-all duration-200 hover:scale-105"
+          className={`flex gap-3 h-12 px-6 rounded-2xl font-medium transition-all duration-200 hover:scale-105 ${
+            pathname === "/chats"
+              ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+              : ""
+          }`}
         >
           <MessageSquare size={20} />
           {!isMobile && "Mensagens"}
@@ -59,9 +71,13 @@ export default function Navbar() {
       <Link href="/create-listing">
         <Button
           variant={pathname === "/create-listing" ? "default" : "ghost"}
-          className="flex gap-3 h-12 px-6 rounded-2xl font-medium transition-all duration-200 hover:scale-105"
+          className={`flex gap-3 h-12 px-6 rounded-2xl font-medium transition-all duration-200 hover:scale-105 ${
+            pathname === "/create-listing"
+              ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+              : ""
+          }`}
         >
-          <PlusCircle size={20} />
+          <BookPlus size={20} />
           {!isMobile && "Anunciar"}
         </Button>
       </Link>
@@ -73,12 +89,9 @@ export default function Navbar() {
       <div className="container flex h-20 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href="/feed" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">UH</span>
+            <div className="p-2 bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl transition-all duration-200 transform hover:scale-105">
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-white">uH</span>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
-              UniHome
-            </span>
           </Link>
         </div>
 

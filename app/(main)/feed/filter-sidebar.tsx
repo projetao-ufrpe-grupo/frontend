@@ -1,13 +1,12 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { Filter } from "lucide-react"
+import { Slider } from "@/components/ui/slider"
+import { useState } from "react"
 
 interface FilterSidebarProps {
   onApply?: () => void
@@ -19,10 +18,6 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Filter size={20} className="text-primary" />
-        <h2 className="text-lg font-semibold">Filtros</h2>
-      </div>
 
       <Separator />
 

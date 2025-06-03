@@ -202,16 +202,28 @@ export default function FeedPage() {
         <Tabs defaultValue="all" className="w-full">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
             <TabsList className="grid w-full lg:w-auto grid-cols-4 lg:grid-cols-4 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800">
-              <TabsTrigger value="all" className="rounded-xl font-medium">
+              <TabsTrigger
+                value="all"
+                className="rounded-xl font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white"
+              >
                 Todos
               </TabsTrigger>
-              <TabsTrigger value="apartment" className="rounded-xl font-medium">
+              <TabsTrigger
+                value="apartment"
+                className="rounded-xl font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white"
+              >
                 Apartamentos
               </TabsTrigger>
-              <TabsTrigger value="room" className="rounded-xl font-medium">
+              <TabsTrigger
+                value="room"
+                className="rounded-xl font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white"
+              >
                 Quartos
               </TabsTrigger>
-              <TabsTrigger value="house" className="rounded-xl font-medium">
+              <TabsTrigger
+                value="house"
+                className="rounded-xl font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white"
+              >
                 Casas
               </TabsTrigger>
             </TabsList>
@@ -223,16 +235,48 @@ export default function FeedPage() {
                 onValueChange={(value) => value && setTimeFilter(value)}
                 className="rounded-2xl bg-gray-100 dark:bg-gray-800 p-1"
               >
-                <ToggleGroupItem value="all" size="sm" className="rounded-xl font-medium">
+                <ToggleGroupItem
+                  value="all"
+                  size="sm"
+                  className={`rounded-xl font-medium ${
+                    timeFilter === "all"
+                      ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+                      : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
+                >
                   Tudo
                 </ToggleGroupItem>
-                <ToggleGroupItem value="today" size="sm" className="rounded-xl font-medium">
+                <ToggleGroupItem
+                  value="today"
+                  size="sm"
+                  className={`rounded-xl font-medium ${
+                    timeFilter === "today"
+                      ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+                      : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
+                >
                   Hoje
                 </ToggleGroupItem>
-                <ToggleGroupItem value="week" size="sm" className="rounded-xl font-medium">
+                <ToggleGroupItem
+                  value="week"
+                  size="sm"
+                  className={`rounded-xl font-medium ${
+                    timeFilter === "week"
+                      ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+                      : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
+                >
                   Semana
                 </ToggleGroupItem>
-                <ToggleGroupItem value="month" size="sm" className="rounded-xl font-medium">
+                <ToggleGroupItem
+                  value="month"
+                  size="sm"
+                  className={`rounded-xl font-medium ${
+                    timeFilter === "month"
+                      ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+                      : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
+                >
                   Mês
                 </ToggleGroupItem>
               </ToggleGroup>
@@ -241,7 +285,11 @@ export default function FeedPage() {
                 <Button
                   variant={viewMode === "grid" ? "default" : "ghost"}
                   size="icon"
-                  className="rounded-xl"
+                  className={`rounded-xl ${
+                    viewMode === "grid"
+                      ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+                      : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
                   onClick={() => setViewMode("grid")}
                 >
                   <LayoutGrid className="h-4 w-4" />
@@ -249,7 +297,11 @@ export default function FeedPage() {
                 <Button
                   variant={viewMode === "list" ? "default" : "ghost"}
                   size="icon"
-                  className="rounded-xl"
+                  className={`rounded-xl ${
+                    viewMode === "list"
+                      ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+                      : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
                   onClick={() => setViewMode("list")}
                 >
                   <List className="h-4 w-4" />

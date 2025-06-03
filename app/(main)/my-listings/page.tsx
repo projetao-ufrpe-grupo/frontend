@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { PlusCircle, Eye, EyeOff, MessageSquare, Calendar, AlertCircle } from "lucide-react"
+import { AlertCircle, Calendar, Eye, EyeOff, MessageSquare, PlusCircle } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import { useState } from "react"
 
 // Dados simulados de anúncios do usuário
 const myListings = [
@@ -22,7 +22,7 @@ const myListings = [
     views: 45,
     inquiries: 5,
     createdAt: "10/04/2023",
-    image: "/placeholder.svg?height=300&width=500",
+    image: '/images/apartment1.png',
   },
   {
     id: "2",
@@ -35,7 +35,7 @@ const myListings = [
     views: 32,
     inquiries: 3,
     createdAt: "15/04/2023",
-    image: "/placeholder.svg?height=300&width=500",
+    image: '/images/apartment1.png',
   },
   {
     id: "3",
@@ -48,7 +48,7 @@ const myListings = [
     views: 12,
     inquiries: 0,
     createdAt: "20/03/2023",
-    image: "/placeholder.svg?height=300&width=500",
+          image: '/images/apartment1.png',
   },
 ]
 
@@ -138,7 +138,7 @@ export default function MyListingsPage() {
                   <Card key={listing.id}>
                     <div className="aspect-video relative">
                       <Image
-                        src={listing.image || "/placeholder.svg"}
+                        src={listing.image || "/images/apartment1.png"}
                         alt={listing.title}
                         fill
                         className="object-cover rounded-t-lg"
@@ -210,7 +210,7 @@ export default function MyListingsPage() {
                   <Card key={listing.id}>
                     <div className="aspect-video relative">
                       <Image
-                        src={listing.image || "/placeholder.svg"}
+                        src={listing.image || "/images/apartment1.png"}
                         alt={listing.title}
                         fill
                         className="object-cover rounded-t-lg opacity-70"

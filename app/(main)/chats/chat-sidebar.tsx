@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Search, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { Contact } from "./types"
-import { cn } from "@/lib/utils"
+import { Input } from "@/components/ui/input"
 import { useMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
+import { Search, User, X } from "lucide-react"
+import { useState } from "react"
+import type { Contact } from "./types"
 
 // Dados de exemplo
 const mockContacts: Contact[] = [
@@ -88,9 +88,12 @@ export function ChatSidebar({
     >
       {/* Cabeçalho da barra lateral */}
       <div className="p-4 border-b flex items-center justify-between">
-        <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
-          Conversas
-        </h2>
+        <div className="flex items-center gap-2">
+          <User className="h-8 w-8 text-blue-500" />
+          <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+            Conexões
+          </h2>
+        </div>
         {isMobile && (
           <Button variant="ghost" size="icon" onClick={() => setIsMobileSidebarOpen(false)} className="rounded-xl">
             <X className="h-5 w-5" />

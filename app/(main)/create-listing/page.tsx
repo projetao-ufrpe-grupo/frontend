@@ -9,7 +9,24 @@ import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, ArrowRight, Camera, Check, DollarSign, Home, MapPin, Plus, Upload, X } from "lucide-react"
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bed,
+  Building,
+  Building2,
+  Camera,
+  Check,
+  DollarSign,
+  Eye,
+  Home,
+  House,
+  Info,
+  MapPin,
+  Plus,
+  Upload,
+  X
+} from "lucide-react"
 import { useState } from "react"
 
 const steps = [
@@ -110,15 +127,18 @@ export default function CreateListingPage() {
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h2 className="text-3xl font-bold mb-3">Que tipo de imóvel você quer anunciar?</h2>
+              <h2 className="text-3xl font-bold mb-3 flex items-center justify-center gap-3">
+                <Home className="text-blue-600" size={32} />
+                Que tipo de imóvel você quer anunciar?
+              </h2>
               <p className="text-muted-foreground text-lg">Selecione a opção que melhor descreve seu imóvel</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { value: "apartment", label: "Apartamento", description: "Unidade em prédio residencial" },
-                { value: "house", label: "Casa", description: "Casa independente" },
-                { value: "room", label: "Quarto", description: "Quarto em casa ou apartamento compartilhado" },
-                { value: "studio", label: "Kitnet/Studio", description: "Ambiente integrado" },
+                { value: "apartment", label: "Apartamento", description: "Unidade em prédio residencial", icon: Building },
+                { value: "house", label: "Casa", description: "Casa independente", icon: House },
+                { value: "room", label: "Quarto", description: "Quarto em casa ou apartamento compartilhado", icon: Bed },
+                { value: "studio", label: "Kitnet/Studio", description: "Ambiente integrado", icon: Building2 },
               ].map((option) => (
                 <Card
                   key={option.value}
@@ -131,7 +151,7 @@ export default function CreateListingPage() {
                 >
                   <CardContent className="p-8 text-center">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                      <Home className="text-white" size={32} />
+                      <option.icon className="text-white" size={32} />
                     </div>
                     <h3 className="text-xl font-semibold mb-2">{option.label}</h3>
                     <p className="text-muted-foreground">{option.description}</p>
@@ -146,7 +166,10 @@ export default function CreateListingPage() {
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h2 className="text-3xl font-bold mb-3">Onde está localizado seu imóvel?</h2>
+              <h2 className="text-3xl font-bold mb-3 flex items-center justify-center gap-3">
+                <MapPin className="text-blue-600" size={32} />
+                Onde está localizado seu imóvel?
+              </h2>
               <p className="text-muted-foreground text-lg">Forneça o endereço completo</p>
             </div>
             <div className="max-w-2xl mx-auto space-y-6">
@@ -212,7 +235,10 @@ export default function CreateListingPage() {
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h2 className="text-3xl font-bold mb-3">Detalhes do imóvel</h2>
+              <h2 className="text-3xl font-bold mb-3 flex items-center justify-center gap-3">
+                <Info className="text-blue-600" size={32} />
+                Detalhes do imóvel
+              </h2>
               <p className="text-muted-foreground text-lg">Descreva as características principais</p>
             </div>
             <div className="max-w-2xl mx-auto space-y-8">
@@ -350,7 +376,10 @@ export default function CreateListingPage() {
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h2 className="text-3xl font-bold mb-3">Qual o valor do aluguel?</h2>
+              <h2 className="text-3xl font-bold mb-3 flex items-center justify-center gap-3">
+                <DollarSign className="text-blue-600" size={32} />
+                Qual o valor do aluguel?
+              </h2>
               <p className="text-muted-foreground text-lg">Defina um preço competitivo para seu imóvel</p>
             </div>
             <div className="max-w-md mx-auto space-y-6">
@@ -390,7 +419,10 @@ export default function CreateListingPage() {
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h2 className="text-3xl font-bold mb-3">Adicione fotos do imóvel</h2>
+              <h2 className="text-3xl font-bold mb-3 flex items-center justify-center gap-3">
+                <Camera className="text-blue-600" size={32} />
+                Adicione fotos do imóvel
+              </h2>
               <p className="text-muted-foreground text-lg">Fotos de qualidade atraem mais interessados</p>
             </div>
             <div className="max-w-2xl mx-auto">
@@ -412,7 +444,10 @@ export default function CreateListingPage() {
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h2 className="text-3xl font-bold mb-3">Revise seu anúncio</h2>
+              <h2 className="text-3xl font-bold mb-3 flex items-center justify-center gap-3">
+                <Eye className="text-blue-600" size={32} />
+                Revise seu anúncio
+              </h2>
               <p className="text-muted-foreground text-lg">Confira todas as informações antes de publicar</p>
             </div>
             <div className="max-w-2xl mx-auto">
@@ -485,7 +520,10 @@ export default function CreateListingPage() {
               </div>
 
               <div className="mb-8">
-                <Progress value={progress} className="h-2 rounded-full" />
+                <Progress
+                  value={progress}
+                  className="h-2 rounded-full [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600"
+                />
               </div>
 
               {/* Steps Verticais */}
@@ -557,14 +595,14 @@ export default function CreateListingPage() {
                   </Button>
 
                   {currentStep === steps.length ? (
-                    <Button className="h-12 px-8 rounded-2xl font-medium bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600">
+                    <Button className="h-12 px-8 rounded-2xl font-medium bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white">
                       <Check size={18} className="mr-2" />
                       Publicar Anúncio
                     </Button>
                   ) : (
                     <Button
                       onClick={nextStep}
-                      className="h-12 px-8 rounded-2xl font-medium bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600"
+                      className="h-12 px-8 rounded-2xl font-medium bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white"
                     >
                       Próximo
                       <ArrowRight size={18} className="ml-2" />

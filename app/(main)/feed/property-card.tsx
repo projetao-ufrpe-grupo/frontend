@@ -1,12 +1,12 @@
 "use client"
 
-import Image from "next/image"
-import Link from "next/link"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Heart, MapPin, School, Ruler, BedDouble, Bath } from "lucide-react"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { useFavorites } from "@/hooks/use-favorites"
+import { Bath, BedDouble, Heart, MapPin, Ruler, School } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
 
 interface PropertyCardProps {
   property: {
@@ -37,7 +37,7 @@ export default function PropertyCard({ property, viewMode = "grid" }: PropertyCa
         <div className="flex flex-col lg:flex-row">
           <div className="relative w-full lg:w-80 h-64 lg:h-auto">
             <Link href={`/listing/${property.id}`}>
-              <Image src="/placeholder.svg?height=300&width=400" alt={property.title} fill className="object-cover" />
+              <Image src={property.images[0]} alt={property.title} fill className="object-cover" />
             </Link>
             <Button
               variant="ghost"
@@ -127,7 +127,7 @@ export default function PropertyCard({ property, viewMode = "grid" }: PropertyCa
         <Link href={`/listing/${property.id}`}>
           <div className="aspect-[4/3] relative overflow-hidden">
             <Image
-              src="/placeholder.svg?height=300&width=400"
+              src={property.images[0]}
               alt={property.title}
               fill
               className="object-cover transition-transform duration-300 hover:scale-105"
