@@ -23,7 +23,7 @@ bun install
 
 🔄 Rodando o projeto em modo de desenvolvimento
 ```bash
-bun dev
+bun run dev
 ```
 
 ✅ Acesse: http://localhost:3000
