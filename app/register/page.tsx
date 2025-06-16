@@ -5,12 +5,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { authService } from "@/lib/services/auth.service"
 import { AnimatePresence, motion } from "framer-motion"
 import { Eye, EyeOff, Home, Loader2, Shield, Sparkles, Users } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import type React from "react"
 import { useState } from "react"
+import { toast } from "sonner"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -21,7 +23,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "student", // 'student' ou 'landlord'
+    userType: "student" as "student" | "landlord",
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,19 +32,34 @@ export default function RegisterPage() {
   }
 
   const handleRadioChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, userType: value }))
+    setFormData((prev) => ({ ...prev, userType: value as "student" | "landlord" }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulação de cadastro com delay para mostrar o loading
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("As senhas não coincidem")
+      setIsLoading(false)
+      return
+    }
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const userData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: "",
+        userType: (formData.userType === "student" ? "LOCATARIO" : "LOCADOR") as "LOCATARIO" | "LOCADOR"
+      }
+
+      await authService.register(userData)
+      toast.success("Conta criada com sucesso!")
       router.push("/feed")
     } catch (error) {
       console.error("Registration failed:", error)
+    } finally {
       setIsLoading(false)
     }
   }
