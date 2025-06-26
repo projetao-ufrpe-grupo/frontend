@@ -21,6 +21,11 @@ export interface LoginUserPayload {
   password: string;
 }
 
+export type LoginResponse = {
+  token: string;
+  user: User;
+};
+
 export interface ApiResponse<T> {
   data: T;
   message?: string;

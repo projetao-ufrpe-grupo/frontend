@@ -10,6 +10,8 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import type React from "react"
 import { useState } from "react"
+import { authService } from "@/lib/services/auth.service"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -26,15 +28,35 @@ export default function LoginPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
-    // Simulação de login com delay para mostrar o loading
+    // Validação simples dos campos
+    if (!formData.email || !formData.password) {
+      toast.error("Por favor, preencha todos os campos.")
+      setIsLoading(false)
+      return
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      toast.error("Por favor, insira um email válido.")
+      setIsLoading(false)
+      return
+    }
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      router.push("/feed")
+      // Chamada ao serviço de login com o mesmo padrão do registro
+      const response = await authService.login({
+        email: formData.email,
+        password: formData.password
+      })
+      
+      // Mensagem de sucesso com o nome do usuário
+      toast.success(`Bem-vindo(a), ${response.data.user.name}!`)
+      router.push("/home")
     } catch (error) {
       console.error("Login failed:", error)
+      toast.error("Credenciais inválidas. Por favor, tente novamente.")
+    } finally {
       setIsLoading(false)
     }
   }
