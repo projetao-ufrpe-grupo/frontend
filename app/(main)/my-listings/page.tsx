@@ -1,5 +1,7 @@
 "use client"
 
+import { updateAdStatus } from '@/lib/services/ad.service';
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,7 +20,7 @@ const myListings = [
     price: 1200,
     location: "Butantã, São Paulo - SP",
     university: "USP",
-    status: "active",
+    status: true,
     views: 45,
     inquiries: 5,
     createdAt: "10/04/2023",
@@ -31,7 +33,7 @@ const myListings = [
     price: 800,
     location: "Pampulha, Belo Horizonte - MG",
     university: "UFMG",
-    status: "active",
+    status: true,
     views: 32,
     inquiries: 3,
     createdAt: "15/04/2023",
@@ -44,7 +46,7 @@ const myListings = [
     price: 600,
     location: "Cidade Universitária, Recife - PE",
     university: "UFPE",
-    status: "inactive",
+    status: false,
     views: 12,
     inquiries: 0,
     createdAt: "20/03/2023",
@@ -84,23 +86,23 @@ const appointments = [
 ]
 
 export default function MyListingsPage() {
-  const [activeListings, setActiveListings] = useState(myListings.filter((listing) => listing.status === "active"))
+  const [activeListings, setActiveListings] = useState(myListings.filter(l => l.status))
   const [inactiveListings, setInactiveListings] = useState(
-    myListings.filter((listing) => listing.status === "inactive"),
+    myListings.filter((listing) => !listing.status),
   )
 
   const toggleListingStatus = (id: string, currentStatus: string) => {
-    if (currentStatus === "active") {
+    if (currentStatus) {
       const listing = activeListings.find((l) => l.id === id)
       if (listing) {
-        listing.status = "inactive"
+        listing.status = false
         setActiveListings(activeListings.filter((l) => l.id !== id))
         setInactiveListings([...inactiveListings, listing])
       }
     } else {
       const listing = inactiveListings.find((l) => l.id === id)
       if (listing) {
-        listing.status = "active"
+        listing.status = true
         setInactiveListings(inactiveListings.filter((l) => l.id !== id))
         setActiveListings([...activeListings, listing])
       }
@@ -181,10 +183,10 @@ export default function MyListingsPage() {
                       <Button
                         variant="ghost"
                         className="w-full text-muted-foreground"
-                        onClick={() => toggleListingStatus(listing.id, "active")}
+                        onClick={() => updateAdStatus(listing.id, !listing.status)}
                       >
                         <EyeOff size={16} className="mr-2" />
-                        Desativar
+                        {listing.status ? "Pausar anúncio" : "Ativar anúncio"}
                       </Button>
                     </CardFooter>
                   </Card>

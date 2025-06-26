@@ -1,3 +1,5 @@
+// Funções de autenticação para registro, login, obtenção do usuário atual e logout
+
 import api from '../axios';
 import { ApiResponse, RegisterUserPayload, LoginUserPayload, User, LoginResponse } from './types';
 
