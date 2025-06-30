@@ -21,6 +21,11 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import InterestedUsers from "./interested-users"
+import ListingLoading from "./loading" // Renomeie para evitar confusão se 'loading' for um estado
+import { useState, useEffect } from 'react';
+import { getAdById, getInterestedUsers } from "../../../../lib/services/ad.service"; // Supondo o caminho correto
+import { useParams } from "next/navigation";
+import { Ad, User } from "@/lib/services/types";
 
 // Dados simulados de uma propriedade específica
 const property = {
@@ -46,7 +51,7 @@ const property = {
   ],
   type: "Apartamento",
   availableFrom: "01/06/2023",
-  landlord: {
+  anunciante: {
     id: "101",
     name: "Carlos Silva",
     rating: 4.8,
@@ -56,7 +61,45 @@ const property = {
   },
 }
 
-export default function ListingPage({ params }: { params: { id: string } }) {
+export default function ListingPage() {
+  const { id } = useParams();
+  const [property, setProperty] = useState<Ad | null>(null);
+  const [interestedUsers, setInterestedUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const adResponse = await getAdById(id as string);
+        setProperty(adResponse.data);
+        
+        const usersResponse = await getInterestedUsers(id as string);
+        setInterestedUsers(usersResponse.data);
+      } catch (err) {
+        setError("Falha ao carregar os dados do anúncio");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  if (loading) {
+    return <ListingLoading />;
+  }
+
+  if (error) {
+    return <div className="container py-10 text-center text-red-500">{error}</div>;
+  }
+
+  if (!property) {
+    return <div className="container py-10 text-center">Anúncio não encontrado</div>;
+  }
+
   return (
     <div className="container py-10">
       <div className="mb-8">
@@ -65,25 +108,25 @@ export default function ListingPage({ params }: { params: { id: string } }) {
         </h1>
         <div className="flex items-center text-muted-foreground mb-6">
           <MapPin size={20} className="mr-2" />
-          <span className="text-lg">{property.location}</span>
+          <span className="text-lg">{property.imovel?.cidade}</span>
         </div>
 
         <div className="flex flex-wrap gap-3 mb-8">
           <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 rounded-full text-base">
             <School size={16} />
-            {property.university} • {property.distance}
+            {property.universidade} • {"property.imovel?.distancia"}
           </Badge>
           <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 rounded-full text-base">
             <BedDouble size={16} />
-            {property.bedrooms} {property.bedrooms > 1 ? "quartos" : "quarto"}
+            {(property.imovel?.qtd_quartos ?? 0)} {(property.imovel?.qtd_quartos ?? 0) > 1 ? "quartos" : "quarto"}
           </Badge>
           <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 rounded-full text-base">
             <Bath size={16} />
-            {property.bathrooms} {property.bathrooms > 1 ? "banheiros" : "banheiro"}
+            {property.imovel?.qtd_banheiros ?? 0} {(property.imovel?.qtd_banheiros ?? 0) > 1 ? "banheiros" : "banheiro"}
           </Badge>
           <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 rounded-full text-base">
             <Ruler size={16} />
-            {property.area}m²
+            {property.imovel?.area}m²
           </Badge>
           <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 rounded-full text-base">
             <Calendar size={16} />
@@ -143,7 +186,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                     </div>
                     <div>
                       <p className="font-medium text-lg">
-                        {property.bedrooms} {property.bedrooms > 1 ? "quartos" : "quarto"}
+                        {property.imovel?.qtd_quartos ?? 0} {property.imovel?.qtd_quartos ?? 0 > 1 ? "quartos" : "quarto"}
                       </p>
                     </div>
                   </div>
@@ -153,7 +196,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                     </div>
                     <div>
                       <p className="font-medium text-lg">
-                        {property.bathrooms} {property.bathrooms > 1 ? "banheiros" : "banheiro"}
+                        {(property.imovel?.qtd_banheiros ?? 0)} {(property.imovel?.qtd_banheiros ?? 0) > 1 ? "banheiros" : "banheiro"}
                       </p>
                     </div>
                   </div>
@@ -162,7 +205,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                       <Ruler className="text-blue-500" size={24} />
                     </div>
                     <div>
-                      <p className="font-medium text-lg">{property.area}m²</p>
+                      <p className="font-medium text-lg">{property.imovel?.area}m²</p>
                     </div>
                   </div>
                 </div>
@@ -196,7 +239,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
             <TabsContent value="features">
               <h2 className="text-2xl font-bold mb-6">Características</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {property.features.map((feature, index) => (
+                {property.features?.map((feature, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center dark:bg-blue-900/20">
                       <CheckCircle2 size={18} className="text-blue-500" />
@@ -249,8 +292,24 @@ export default function ListingPage({ params }: { params: { id: string } }) {
           <Card className="overflow-hidden rounded-3xl border-0 bg-white/80 backdrop-blur-sm shadow-lg ring-1 ring-gray-900/5 dark:bg-gray-800/80 dark:ring-gray-100/10">
             <CardContent className="pt-8">
               <div className="text-center mb-6">
-                <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
-                  R$ {property.price.toLocaleString()}/mês
+                <div className="space-y-2">
+                  {property.aluguel !== undefined && property.aluguel !== null && (
+                    <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+                      R$ {property.aluguel.toLocaleString('pt-BR')}/mês
+                    </div>
+                  )}
+                  
+                  {property.condominio !== undefined && property.condominio !== null && (
+                    <p className="text-muted-foreground">
+                      + Condomínio: R$ {property.condominio.toLocaleString('pt-BR')}/mês
+                    </p>
+                  )}
+                  
+                  {property.caucao !== undefined && property.caucao !== null && (
+                    <p className="text-muted-foreground">
+                      + Caução: R$ {property.caucao.toLocaleString('pt-BR')}
+                    </p>
+                  )}
                 </div>
                 <p className="text-muted-foreground">+ condomínio e contas</p>
               </div>
@@ -263,7 +322,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                   variant="outline"
                   className="w-full h-12 rounded-2xl flex items-center gap-2 font-medium"
                   onClick={() => {
-                    window.location.href = `/chats?user=${property.landlord.id}`
+                    window.location.href = `/chats?user=${property.anunciante?.id}`
                   }}
                 >
                   <MessageSquare size={18} />
@@ -280,10 +339,10 @@ export default function ListingPage({ params }: { params: { id: string } }) {
           <Card className="overflow-hidden rounded-3xl border-0 bg-white/80 backdrop-blur-sm shadow-lg ring-1 ring-gray-900/5 dark:bg-gray-800/80 dark:ring-gray-100/10">
             <CardContent className="pt-8">
               <div className="mb-6">
-                <Link href={`/user/${property.landlord.id}`} className="font-semibold text-lg hover:text-blue-600">
-                  {property.landlord.name}
+                <Link href={`/user/${property.anunciante?.id}`} className="font-semibold text-lg hover:text-blue-600">
+                  {property.anunciante?.name}
                 </Link>
-                <div className="text-muted-foreground">Membro desde {property.landlord.memberSince}</div>
+                <div className="text-muted-foreground">Membro desde {property.anunciante?.createdAt}</div>
               </div>
 
               <div className="space-y-3 mb-6">
@@ -291,17 +350,17 @@ export default function ListingPage({ params }: { params: { id: string } }) {
                   <span>Avaliação:</span>
                   <span className="font-medium flex items-center gap-1">
                     <Star size={16} fill="#FFD700" />
-                    {property.landlord.rating}/5
+                    {property.anunciante?.rating}/5
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tempo de resposta:</span>
-                  <span className="font-medium">{property.landlord.responseTime}</span>
+                  <span className="font-medium">{property.anunciante?.responseTime}</span>
                 </div>
               </div>
 
               <Button variant="outline" className="w-full h-12 rounded-2xl font-medium">
-                <Link href={`/user/${property.landlord.id}`} className="w-full">
+                <Link href={`/user/${property.anunciante?.id}`} className="w-full">
                   Ver perfil
                 </Link>
               </Button>
@@ -311,7 +370,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
           {/* Lista de Usuários Interessados */}
           <Card>
             <CardContent className="pt-8 flex-1 flex flex-col">
-              <InterestedUsers />
+              <InterestedUsers users={interestedUsers} isLoading={loading} />
             </CardContent>
           </Card>
         </div>

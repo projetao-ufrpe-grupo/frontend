@@ -243,12 +243,12 @@ export default function MyListingsPage() {
                         </Link>
                       </div>
                       <Button
-                        variant="default"
-                        className="w-full"
-                        onClick={() => toggleListingStatus(listing.id, "inactive")}
+                        variant="ghost"
+                        className="w-full text-muted-foreground"
+                        onClick={() => updateAdStatus(listing.id, !listing.status)}
                       >
-                        <Eye size={16} className="mr-2" />
-                        Ativar
+                        <EyeOff size={16} className="mr-2" />
+                        {listing.status ? "Pausar anúncio" : "Ativar anúncio"}
                       </Button>
                     </CardFooter>
                   </Card>

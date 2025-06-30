@@ -1,14 +1,122 @@
 "use client"
 
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MessageSquare, Search, Users } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import Link from "next/link"
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MessageSquare, Search, Users } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import Link from "next/link";
+import type { User } from "@/lib/services/types";
+
+interface InterestedUsersProps {
+  users: User[];
+  isLoading?: boolean;
+}
+
+export default function InterestedUsers({ users, isLoading = false }: InterestedUsersProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
+  );
+
+  if (isLoading) {
+    return (
+      <div className="h-[400px] flex flex-col">
+        <h3 className="text-lg font-medium mb-3 flex items-center gap-2">
+          <Users size={20} className="text-primary" />
+          Interested Users
+        </h3>
+        <div className="mb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search users..." className="pl-9" disabled />
+          </div>
+        </div>
+        <div className="space-y-3 flex-1">
+          {Array(8)
+            .fill(0)
+            .map((_, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="skeleton h-10 w-10 rounded-full" />
+                  <div>
+                    <div className="skeleton h-5 w-32 mb-1" />
+                    <div className="skeleton h-4 w-24" />
+                  </div>
+                </div>
+                <div className="skeleton h-8 w-8" />
+              </div>
+            ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col h-auto max-h-[350px] border rounded-lg p-3 bg-card">
+      <h3 className="text-md font-medium mb-2 flex items-center gap-2">
+        <Users size={20} className="text-primary" />
+        Interested Users
+      </h3>
+      <div className="mb-2">
+        <div className="relative">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search users..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="overflow-y-auto pr-2 mt-2" style={{ maxHeight: "220px" }}>
+        {filteredUsers.length > 0 ? (
+          <div className="space-y-2">
+            {filteredUsers.map((user) => (
+              <div key={user.id} className="flex items-center justify-between group">
+                <Link href={`/user/${user.id}`} className="flex items-center gap-3 flex-1">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium group-hover:text-primary transition-colors">{user.name}</p>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                  </div>
+                </Link>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="p-2 rounded-full hover:bg-muted transition-colors"
+                        onClick={() => {
+                          window.location.href = `/chats?user=${user.id}`
+                        }}
+                      >
+                        <MessageSquare size={16} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Send message to {user.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-muted-foreground py-4">No users found</p>
+        )}
+      </div>
+    </div>
+  )
+}
 
 // Dados simulados de usuários interessados (lista expandida)
-const interestedUsers = [
+const interestedUsersMock = [
   {
     id: "1",
     name: "Ana Silva",
@@ -150,118 +258,3 @@ const interestedUsers = [
     avatar: "/placeholder.svg?height=100&width=100",
   },
 ]
-
-export default function InterestedUsers() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-
-  // Simular carregamento ao montar o componente
-  useState(() => {
-    setIsLoading(true)
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 1500)
-    return () => clearTimeout(timer)
-  })
-
-  const filteredUsers = interestedUsers.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.course.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.university.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
-
-  if (isLoading) {
-    return (
-      <div className="h-[400px] flex flex-col">
-        <h3 className="text-lg font-medium mb-3 flex items-center gap-2">
-          <Users size={20} className="text-primary" />
-          Usuários interessados
-        </h3>
-        <div className="mb-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar usuários..." className="pl-9" disabled />
-          </div>
-        </div>
-        <div className="space-y-3 flex-1">
-          {Array(8)
-            .fill(0)
-            .map((_, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="skeleton h-10 w-10 rounded-full" />
-                  <div>
-                    <div className="skeleton h-5 w-32 mb-1" />
-                    <div className="skeleton h-4 w-24" />
-                  </div>
-                </div>
-                <div className="skeleton h-8 w-8" />
-              </div>
-            ))}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex flex-col h-auto max-h-[350px] border rounded-lg p-3 bg-card">
-      <h3 className="text-md font-medium mb-2 flex items-center gap-2">
-        <Users size={20} className="text-primary" />
-        Usuários interessados
-      </h3>
-      <div className="mb-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar usuários..."
-            className="pl-9"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
-      <div className="overflow-y-auto pr-2 mt-2" style={{ maxHeight: "220px" }}>
-        {filteredUsers.length > 0 ? (
-          <div className="space-y-2">
-            {filteredUsers.map((user) => (
-              <div key={user.id} className="flex items-center justify-between group">
-                <Link href={`/user/${user.id}`} className="flex items-center gap-3 flex-1">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium group-hover:text-primary transition-colors">{user.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {user.university} • {user.course}
-                    </p>
-                  </div>
-                </Link>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        className="p-2 rounded-full hover:bg-muted transition-colors"
-                        onClick={() => {
-                          window.location.href = `/chats?user=${user.id}`
-                        }}
-                      >
-                        <MessageSquare size={16} />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Enviar mensagem para {user.name}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-muted-foreground py-4">Nenhum usuário encontrado</p>
-        )}
-      </div>
-    </div>
-  )
-}
