@@ -52,8 +52,6 @@ export interface Property {
   logradouro: string;
   numero: string;
   area: number; // Área em m²
-  created_at: string;
-  updated_at: string;
 }
 
 export interface Ad {
@@ -66,17 +64,12 @@ export interface Ad {
   duracao_minima_contrato: number;
   pausado: boolean;
   created_at: string;
-  updated_at: string;
-  anunciante_id: string; // que será o User.id onde userType = 'LOCADOR'
-  imovel_id: string;
   availableFrom: string; // Data de disponibilidade do imóvel
   images: string[]; // URLs das imagens do anúncio
   description?: string; // Descrição do anúncio, opcional
-  furnished?: boolean; // Indica se o imóvel é mobiliado
-  pets?: boolean; // Indica se animais de estimação são permitidos
-  smoking?: boolean; // Indica se fumar é permitido 
   features?: string[]; // Lista de recursos adicionais do imóvel
-
+  imovel_id: string; // ID do imóvel relacionado
+  anunciante_id: string; // ID do anunciante (LOCADOR)
   // Expansões para facilitar no front:
   imovel?: Property;
   anunciante?: User; // usar User aqui

@@ -3,13 +3,10 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { id } from "date-fns/locale"
 import {
   ArrowLeft,
   ArrowRight,
@@ -29,8 +26,12 @@ import {
   X
 } from "lucide-react"
 import { useState } from "react"
-import { Ad } from "@/lib/services/types"
+import { Property, Ad } from "@/lib/services/types"
 import api from "@/lib/axios"
+import { TagCardsSelector } from "@/components/listing/listing-tags-selector"
+import { mask } from "remask"
+import { StateSelect } from "@/components/states"
+
 
 const steps = [
   {
@@ -71,6 +72,34 @@ const steps = [
   },
 ]
 
+interface FormData {
+  // Dados do Imóvel (Property)
+  id: string;
+  tipo: string;
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  cep: string;
+  qtd_quartos: string;
+  qtd_banheiros: string;
+  area: string;
+  
+  // Dados do Anúncio (Ad)
+  title: string;
+  aluguel: string;
+  condominio: string;
+  caucao: string;
+  universidade: string;
+  duracao_minima_contrato: string;
+  description: string;
+  features: string[];
+  images: string[];
+  availableFrom: string;
+}
+
 type ListingFormProps = {
   mode?: 'create' | 'edit'
   initialData?: Ad
@@ -78,30 +107,34 @@ type ListingFormProps = {
 
 export default function ListingForm({ mode = 'create', initialData }: ListingFormProps) {
   const [currentStep, setCurrentStep] = useState(1)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
+    // Unificar nomes usando sempre snake_case
     id: initialData?.id ?? "",
-    type: initialData?.imovel?.tipo ?? "",
-    address: initialData?.imovel
-      ? `${initialData.imovel.logradouro}, ${initialData.imovel.numero}${initialData.imovel.complemento ? `, ${initialData.imovel.complemento}` : ""}`
-      : "",
-    city: initialData?.imovel?.cidade ?? "",
-    state: initialData?.imovel?.estado ?? "",
-    zipCode: initialData?.imovel?.cep ?? "",
-    bedrooms: initialData?.imovel?.qtd_quartos?.toString() ?? "",
-    bathrooms: initialData?.imovel?.qtd_banheiros?.toString() ?? "",
+    tipo: initialData?.imovel?.tipo ?? "",
+    logradouro: initialData?.imovel?.logradouro ?? "",
+    numero: initialData?.imovel?.numero ?? "",
+    complemento: initialData?.imovel?.complemento ?? "",
+    bairro: initialData?.imovel?.bairro ?? "",
+    cidade: initialData?.imovel?.cidade ?? "",
+    estado: initialData?.imovel?.estado ?? "",
+    cep: initialData?.imovel?.cep ?? "",
+    qtd_quartos: initialData?.imovel?.qtd_quartos?.toString() ?? "",
+    qtd_banheiros: initialData?.imovel?.qtd_banheiros?.toString() ?? "",
     area: initialData?.imovel?.area?.toString() ?? "",
-    furnished: initialData?.furnished ?? false,
-    pets: initialData?.pets ?? false,
-    smoking: initialData?.smoking ?? false,
-    price: initialData?.aluguel?.toString() ?? "",
+
+    title: initialData?.title ?? "",
+    aluguel: initialData?.aluguel?.toString() ?? "",
+    condominio: initialData?.condominio?.toString() ?? "",
+    caucao: initialData?.caucao?.toString() ?? "",
+    universidade: initialData?.universidade ?? "USP",
+    duracao_minima_contrato: initialData?.duracao_minima_contrato?.toString() ?? "6",
     description: initialData?.description ?? initialData?.imovel?.descricao ?? "",
     features: initialData?.features ?? [],
-    photos: initialData?.images ?? [],
-  })
+    images: initialData?.images ?? [],
+    availableFrom: initialData?.availableFrom ?? new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD
+  });
 
   const [newFeature, setNewFeature] = useState("")
-
-  const progress = (currentStep / steps.length) * 100
 
   const nextStep = () => {
     if (currentStep < steps.length) {
@@ -132,62 +165,129 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
     })
   }
 
+  // Função para formatar o tipo de imóvel de forma mais amigável
+function formatPropertyType(type: string): string {
+  const types: Record<string, string> = {
+    apartment: 'Apartamento',
+    house: 'Casa',
+    room: 'Quarto',
+    studio: 'Kitnet/Studio'
+  };
+  return types[type] || type;
+}
+
+// Função para formatar o endereço completo
+function formatAddress(
+  street: string,
+  number: string,
+  complement: string,
+  city: string,
+  state: string
+  ): string {
+      return [
+        `${street}, ${number}`,
+        complement && `(${complement})`,
+        `${city} - ${state}`
+      ]
+        .filter(Boolean)
+        .join(' ');
+    }
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   async function handleSubmit() {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    
     try {
-      // 1. Preparar dados do imóvel para API
-      const addressParts = formData.address.split(",").map(s => s.trim())
-      const propertyPayload = {
-        tipo: formData.type,
-        logradouro: addressParts[0] || "",
-        numero: addressParts[1] || "",
-        complemento: addressParts[2] || "",
-        cidade: formData.city,
-        estado: formData.state,
-        cep: formData.zipCode,
-        qtd_quartos: parseInt(formData.bedrooms) || 0,
-        qtd_banheiros: parseInt(formData.bathrooms) || 0,
+      // Validar campos obrigatórios
+      if (!formData.tipo || !formData.logradouro || !formData.cidade || !formData.estado) {
+        alert("Por favor, preencha todos os campos obrigatórios (Tipo, Endereço, Cidade e Estado)");
+        return;
+      }
+
+      // Verificar se o aluguel foi preenchido
+      if (!formData.aluguel || parseFloat(formData.aluguel) <= 0) {
+        alert("O valor do aluguel é obrigatório e deve ser maior que zero");
+        return;
+      }
+
+      // 1. Preparar dados do imóvel
+      const propertyPayload: Property = {
+        id: formData.id,
+        tipo: formData.tipo,
+        logradouro: formData.logradouro,
+        numero: formData.numero,
+        complemento: formData.complemento || undefined,
+        bairro: formData.bairro,
+        cidade: formData.cidade,
+        estado: formData.estado,
+        cep: formData.cep,
+        qtd_quartos: parseInt(formData.qtd_quartos) || 0,
+        qtd_banheiros: parseInt(formData.qtd_banheiros) || 0,
         area: parseFloat(formData.area) || 0,
-        descricao: formData.description,
-      }
+        descricao: formData.description || undefined,
+      };
 
-      // 2. Criar ou atualizar imóvel no backend
-      let propertyId = ""
-      if (mode === "edit" && initialData?.imovel_id) {
-        await api.put(`/properties/${initialData.imovel_id}`, propertyPayload)
-        propertyId = initialData.imovel_id
+      // 2. Criar/Atualizar imóvel
+      let propertyId = formData.id;
+      if (mode === "edit" && propertyId) {
+        await api.put(`/properties/${propertyId}`, propertyPayload);
       } else {
-        const res = await api.post("/properties", propertyPayload)
-        propertyId = res.data.data.id
+        const res = await api.post("/properties", propertyPayload);
+        propertyId = res.data.id;
       }
 
-      // 3. Preparar dados do anúncio
-      const adPayload = {
-        title: `Aluguel de ${formData.type} em ${formData.city}`,
-        aluguel: parseFloat(formData.price) || 0,
-        description: formData.description,
-        images: formData.photos,
-        features: formData.features,
-        imovel_id: propertyId,
-        universidade: "USP", // exemplo fixo, adapte conforme sua lógica
-        duracao_minima_contrato: 6,
+      // 3. Preparar dados do anúncio com tratamento de valores
+      const adPayload: Ad = {
+        id: formData.id,
+        title: formData.title || `Aluguel de ${formData.tipo} em ${formData.cidade}`,
+        aluguel: parseFloat(formData.aluguel),
+        condominio: formData.condominio ? parseFloat(formData.condominio) : undefined,
+        caucao: formData.caucao ? parseFloat(formData.caucao) : undefined,
+        universidade: formData.universidade,
+        duracao_minima_contrato: parseInt(formData.duracao_minima_contrato) || 6,
         pausado: false,
-        availableFrom: new Date().toISOString(),
-      }
+        images: formData.images,
+        description: formData.description || undefined,
+        features: formData.features.length > 0 ? formData.features : undefined,
+        availableFrom: formData.availableFrom,
+        imovel_id: propertyId,
+        anunciante_id: initialData?.anunciante?.id || "",
+        created_at: new Date().toISOString(),
+      };
 
-      // 4. Criar ou atualizar anúncio no backend
+      // 4. Criar/Atualizar anúncio
       if (mode === "edit" && initialData?.id) {
-        await api.put(`/ads/${initialData.id}`, adPayload)
-        alert("Anúncio atualizado com sucesso!")
+        await api.put(`/ads/${initialData.id}`, adPayload);
+        alert("Anúncio atualizado com sucesso!");
       } else {
-        await api.post("/ads", adPayload)
-        alert("Anúncio criado com sucesso!")
+        await api.post("/ads", adPayload);
+        alert("Anúncio criado com sucesso!");
       }
 
-      // Aqui você pode redirecionar ou resetar o form, se quiser
+      // Redirecionar após sucesso
+      // router.push('/dashboard') - implementar conforme sua roteamento
 
     } catch (error) {
-      console.error(error)
-      alert("Ocorreu um erro ao salvar o anúncio.")
+  let errorMessage = "Ocorreu um erro ao salvar o anúncio";
+  
+  // Verifica se é um erro do Axios
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const axiosError = error as { response?: { data?: { message?: string } } };
+    if (axiosError.response?.data?.message) {
+      errorMessage += `: ${axiosError.response.data.message}`;
+    }
+  } 
+  // Verifica se é uma instância de Error padrão
+  else if (error instanceof Error) {
+    errorMessage += `: ${error.message}`;
+  }
+  
+    console.error("Erro completo:", error);
+    alert(errorMessage);
+  } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -201,23 +301,46 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
                 <Home className="text-blue-600" size={32} />
                 Que tipo de imóvel você quer anunciar?
               </h2>
-              <p className="text-muted-foreground text-lg">Selecione a opção que melhor descreve seu imóvel</p>
+              <p className="text-muted-foreground text-lg">
+                Selecione a opção que melhor descreve seu imóvel
+              </p>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { value: "apartment", label: "Apartamento", description: "Unidade em prédio residencial", icon: Building },
-                { value: "house", label: "Casa", description: "Casa independente", icon: House },
-                { value: "room", label: "Quarto", description: "Quarto em casa ou apartamento compartilhado", icon: Bed },
-                { value: "studio", label: "Kitnet/Studio", description: "Ambiente integrado", icon: Building2 },
+                {
+                  value: "apartment",
+                  label: "Apartamento",
+                  description: "Unidade em prédio residencial",
+                  icon: Building,
+                },
+                {
+                  value: "house",
+                  label: "Casa",
+                  description: "Casa independente",
+                  icon: House,
+                },
+                {
+                  value: "room",
+                  label: "Quarto",
+                  description: "Quarto em casa ou apartamento compartilhado",
+                  icon: Bed,
+                },
+                {
+                  value: "studio",
+                  label: "Kitnet/Studio",
+                  description: "Ambiente integrado",
+                  icon: Building2,
+                },
               ].map((option) => (
                 <Card
                   key={option.value}
                   className={`cursor-pointer transition-all duration-200 hover:scale-105 rounded-3xl border-2 ${
-                    formData.type === option.value
+                    formData.tipo === option.value
                       ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
-                  onClick={() => setFormData({ ...formData, type: option.value })}
+                  onClick={() => setFormData({ ...formData, tipo: option.value })}
                 >
                   <CardContent className="p-8 text-center">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
@@ -230,7 +353,7 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
               ))}
             </div>
           </div>
-        )
+        );
 
       case 2:
         return (
@@ -243,17 +366,66 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
               <p className="text-muted-foreground text-lg">Forneça o endereço completo</p>
             </div>
             <div className="max-w-2xl mx-auto space-y-6">
-              <div className="space-y-3">
-                <Label htmlFor="address" className="text-base font-medium">
-                  Endereço completo
-                </Label>
-                <Input
-                  id="address"
-                  placeholder="Rua, número, complemento"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="h-12 rounded-xl"
-                />
+              <div className="space-y-6">
+                {/* Rua/Avenida */}
+                <div>
+                  <Label htmlFor="street" className="text-base font-medium">
+                    Rua/Avenida*
+                  </Label>
+                  <Input
+                    id="street"
+                    placeholder="Nome da rua ou avenida"
+                    value={formData.logradouro}
+                    onChange={(e) => setFormData({ ...formData, logradouro: e.target.value })}
+                    className="h-12 rounded-xl"
+                    required
+                  />
+                </div>
+
+                {/* Número e Bairro lado a lado */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="number" className="text-base font-medium">
+                      Número*
+                    </Label>
+                    <Input
+                      id="number"
+                      placeholder="Número"
+                      value={formData.numero}
+                      onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                      className="h-12 rounded-xl"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="bairro" className="text-base font-medium">
+                      Bairro*
+                    </Label>
+                    <Input
+                      id="bairro"
+                      placeholder="Nome do bairro"
+                      value={formData.bairro}
+                      onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
+                      className="h-12 rounded-xl"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Complemento sozinho */}
+                <div>
+                  <Label htmlFor="complement" className="text-base font-medium">
+                    Complemento
+                  </Label>
+                  <Input
+                    id="complement"
+                    placeholder="Apto, bloco, etc."
+                    value={formData.complemento}
+                    onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
+                    className="h-12 rounded-xl"
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
@@ -263,8 +435,8 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
                   <Input
                     id="city"
                     placeholder="São Paulo"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    value={formData.cidade}
+                    onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
                     className="h-12 rounded-xl"
                   />
                 </div>
@@ -272,17 +444,11 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
                   <Label htmlFor="state" className="text-base font-medium">
                     Estado
                   </Label>
-                  <Select value={formData.state} onValueChange={(value) => setFormData({ ...formData, state: value })}>
-                    <SelectTrigger className="h-12 rounded-xl">
-                      <SelectValue placeholder="Selecione o estado" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="SP">São Paulo</SelectItem>
-                      <SelectItem value="RJ">Rio de Janeiro</SelectItem>
-                      <SelectItem value="MG">Minas Gerais</SelectItem>
-                      <SelectItem value="RS">Rio Grande do Sul</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <StateSelect 
+                    value={formData.estado} 
+                    onChange={(value) => setFormData({ ...formData, estado: value })}
+                    className="h-12 rounded-xl"
+                  />
                 </div>
               </div>
               <div className="space-y-3">
@@ -292,14 +458,19 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
                 <Input
                   id="zipCode"
                   placeholder="00000-000"
-                  value={formData.zipCode}
-                  onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                  value={formData.cep}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    const formatted = value.replace(/^(\d{5})(\d)/, '$1-$2');
+                    setFormData({...formData, cep: formatted});
+                  }}
                   className="h-12 rounded-xl"
+                  maxLength={9}
                 />
               </div>
             </div>
           </div>
-        )
+        );
 
       case 3:
         return (
@@ -318,8 +489,8 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
                     Quartos
                   </Label>
                   <Select
-                    value={formData.bedrooms}
-                    onValueChange={(value) => setFormData({ ...formData, bedrooms: value })}
+                    value={formData.qtd_quartos}
+                    onValueChange={(value) => setFormData({ ...formData, qtd_quartos: value })}
                   >
                     <SelectTrigger className="h-12 rounded-xl">
                       <SelectValue placeholder="0" />
@@ -338,8 +509,8 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
                     Banheiros
                   </Label>
                   <Select
-                    value={formData.bathrooms}
-                    onValueChange={(value) => setFormData({ ...formData, bathrooms: value })}
+                    value={formData.qtd_banheiros}
+                    onValueChange={(value) => setFormData({ ...formData, qtd_banheiros: value })}
                   >
                     <SelectTrigger className="h-12 rounded-xl">
                       <SelectValue placeholder="0" />
@@ -369,41 +540,12 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
 
               <div className="space-y-4">
                 <Label className="text-base font-medium">Características</Label>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Checkbox
-                      id="furnished"
-                      checked={formData.furnished}
-                      onCheckedChange={(checked) => setFormData({ ...formData, furnished: checked as boolean })}
-                      className="h-5 w-5 rounded-md"
-                    />
-                    <Label htmlFor="furnished" className="text-base">
-                      Mobiliado
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Checkbox
-                      id="pets"
-                      checked={formData.pets}
-                      onCheckedChange={(checked) => setFormData({ ...formData, pets: checked as boolean })}
-                      className="h-5 w-5 rounded-md"
-                    />
-                    <Label htmlFor="pets" className="text-base">
-                      Aceita animais
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Checkbox
-                      id="smoking"
-                      checked={formData.smoking}
-                      onCheckedChange={(checked) => setFormData({ ...formData, smoking: checked as boolean })}
-                      className="h-5 w-5 rounded-md"
-                    />
-                    <Label htmlFor="smoking" className="text-base">
-                      Permite fumar
-                    </Label>
-                  </div>
-                </div>
+                <TagCardsSelector
+                  initialSelected={formData.features}
+                  onSelectionChange={(tags) => 
+                    setFormData({...formData, features: tags})
+                  }
+                />
               </div>
 
               <div className="space-y-4">
@@ -440,7 +582,7 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
               </div>
             </div>
           </div>
-        )
+        );
 
       case 4:
         return (
@@ -448,26 +590,102 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
             <div className="text-center">
               <h2 className="text-3xl font-bold mb-3 flex items-center justify-center gap-3">
                 <DollarSign className="text-blue-600" size={32} />
-                Qual o valor do aluguel?
+                Defina os valores
               </h2>
-              <p className="text-muted-foreground text-lg">Defina um preço competitivo para seu imóvel</p>
+              <p className="text-muted-foreground text-lg">
+                Informe o aluguel e, se aplicável, condomínio e caução
+              </p>
             </div>
             <div className="max-w-md mx-auto space-y-6">
+              {/* Aluguel (obrigatório) */}
               <div className="space-y-3">
-                <Label htmlFor="price" className="text-base font-medium">
-                  Valor mensal (R$)
+                <Label htmlFor="aluguel" className="text-base font-medium flex items-center">
+                  <Check className="mr-2 h-5 w-5 text-green-500" />
+                  Valor do Aluguel (R$)*
                 </Label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">R$</span>
                   <Input
-                    id="price"
+                    id="aluguel"
                     placeholder="1.200"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    value={formData.aluguel}
+                    onChange={(e) => setFormData({ ...formData, aluguel: e.target.value })}
                     className="h-16 pl-12 text-2xl font-bold rounded-2xl text-center"
                   />
                 </div>
               </div>
+
+              {/* Condomínio (opcional) */}
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <input
+                    id="include-condominio"
+                    type="checkbox"
+                    checked={formData.condominio !== "0"}
+                    onChange={(e) => {
+                      if (!e.target.checked) {
+                        setFormData({ ...formData, condominio: "0" });
+                      } else {
+                        setFormData({ ...formData, condominio: "" });
+                      }
+                    }}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <Label htmlFor="include-condominio" className="ml-2 text-base font-medium">
+                    Incluir Condomínio
+                  </Label>
+                </div>
+                
+                {formData.condominio !== "0" && (
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">R$</span>
+                    <Input
+                      id="condominio"
+                      placeholder="300"
+                      value={formData.condominio}
+                      onChange={(e) => setFormData({ ...formData, condominio: e.target.value })}
+                      className="h-12 pl-12 text-xl font-bold rounded-xl"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Caução (opcional) */}
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <input
+                    id="include-caucao"
+                    type="checkbox"
+                    checked={formData.caucao !== "0"}
+                    onChange={(e) => {
+                      if (!e.target.checked) {
+                        setFormData({ ...formData, caucao: "0" });
+                      } else {
+                        setFormData({ ...formData, caucao: "" });
+                      }
+                    }}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <Label htmlFor="include-caucao" className="ml-2 text-base font-medium">
+                    Incluir Caução
+                  </Label>
+                </div>
+                
+                {formData.caucao !== "0" && (
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">R$</span>
+                    <Input
+                      id="caucao"
+                      placeholder="1.200"
+                      value={formData.caucao}
+                      onChange={(e) => setFormData({ ...formData, caucao: e.target.value })}
+                      className="h-12 pl-12 text-xl font-bold rounded-xl"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Descrição */}
               <div className="space-y-3">
                 <Label htmlFor="description" className="text-base font-medium">
                   Descrição do imóvel
@@ -483,7 +701,7 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
               </div>
             </div>
           </div>
-        )
+        );
 
       case 5:
         return (
@@ -508,7 +726,7 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
               </div>
             </div>
           </div>
-        )
+        );
 
       case 6:
         return (
@@ -523,19 +741,27 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
             <div className="max-w-2xl mx-auto">
               <Card className="rounded-3xl border-0 bg-white/80 backdrop-blur-sm shadow-lg ring-1 ring-gray-900/5 dark:bg-gray-800/80 dark:ring-gray-100/10">
                 <CardContent className="p-8 space-y-6">
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2">Tipo: {formData.type}</h3>
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-semibold">
+                      {formatPropertyType(formData.tipo)} em {formData.cidade}
+                    </h3>
                     <p className="text-muted-foreground">
-                      {formData.address}, {formData.city} - {formData.state}
+                      {formatAddress(
+                        formData.logradouro,
+                        formData.numero,
+                        formData.complemento,
+                        formData.cidade,
+                        formData.estado
+                      )}
                     </p>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold">{formData.bedrooms}</div>
+                      <div className="text-2xl font-bold">{formData.qtd_quartos}</div>
                       <div className="text-sm text-muted-foreground">Quartos</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold">{formData.bathrooms}</div>
+                      <div className="text-2xl font-bold">{formData.qtd_banheiros}</div>
                       <div className="text-sm text-muted-foreground">Banheiros</div>
                     </div>
                     <div className="text-center">
@@ -544,7 +770,21 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-blue-600">R$ {formData.price}/mês</div>
+                    <div className="text-3xl font-bold text-blue-600">
+                      R$ {formData.aluguel}/mês
+                    </div>
+                    
+                    {formData.condominio !== "0" && (
+                      <div className="mt-2 text-lg">
+                        + Condomínio: R$ {formData.condominio}
+                      </div>
+                    )}
+                    
+                    {formData.caucao !== "0" && (
+                      <div className="mt-2 text-lg">
+                        + Caução: R$ {formData.caucao}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <h4 className="font-semibold mb-2">Descrição:</h4>
@@ -566,12 +806,14 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
               </Card>
             </div>
           </div>
-        )
+        );
 
       default:
-        return null
+        return null;
     }
   }
+
+  const progressPercent = (currentStep / steps.length) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -583,6 +825,15 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
           <div className="flex-1">
             <Card className="rounded-3xl border-0 bg-white/80 backdrop-blur-sm shadow-lg ring-1 ring-gray-900/5 dark:bg-gray-800/80 dark:ring-gray-100/10">
               <CardContent className="p-12">
+
+                {/* Barra de progresso */}
+                <div className="w-full h-3 rounded-full bg-gray-300 dark:bg-gray-700 mb-8 overflow-hidden">
+                  <div
+                    className="h-3 bg-blue-600 dark:bg-blue-500 transition-all duration-300 ease-in-out"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+
                 {renderStepContent()}
 
                 {/* Botões navegação */}
@@ -600,10 +851,17 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
                   {currentStep === steps.length ? (
                     <Button
                       onClick={handleSubmit}
+                      disabled={isSubmitting}
                       className="h-12 px-8 rounded-2xl font-medium bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white"
                     >
-                      <Check size={18} className="mr-2" />
-                      Publicar Anúncio
+                      {isSubmitting ? (
+                        <span>Publicando...</span>
+                      ) : (
+                        <>
+                          <Check size={18} className="mr-2" />
+                          Publicar Anúncio
+                        </>
+                      )}
                     </Button>
                   ) : (
                     <Button
