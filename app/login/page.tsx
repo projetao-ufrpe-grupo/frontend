@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { authService } from "@/lib/services/auth.service"
 import { AnimatePresence, motion } from "framer-motion"
 import { Eye, EyeOff, GraduationCap, Home, Loader2, MapPin, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import type React from "react"
 import { useState } from "react"
-import { authService } from "@/lib/services/auth.service"
 import { toast } from "sonner"
 
 export default function LoginPage() {
@@ -29,30 +29,30 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Validação simples dos campos
-    if (!formData.email || !formData.password) {
-      toast.error("Por favor, preencha todos os campos.")
-      setIsLoading(false)
-      return
-    }
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      toast.error("Por favor, insira um email válido.")
-      setIsLoading(false)
-      return
-    }
-
+    
     try {
+      setIsLoading(true);
+
+      // Validação simples dos campos
+      if (!formData.email || !formData.password) {
+        toast.error("Por favor, preencha todos os campos.")
+        return
+      }
+      if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        toast.error("Por favor, insira um email válido.")
+        return
+      }
+
       // Chamada ao serviço de login com o mesmo padrão do registro
       const response = await authService.login({
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        rememberMe: true
       })
       
       // Mensagem de sucesso com o nome do usuário
-      toast.success(`Bem-vindo(a), ${response.data.user.name}!`)
-      router.push("/home")
+      toast.success(`Bem-vindo(a), de volta!`)
+      router.push("/feed")
     } catch (error) {
       console.error("Login failed:", error)
       toast.error("Credenciais inválidas. Por favor, tente novamente.")
@@ -269,7 +269,7 @@ export default function LoginPage() {
                     </CardDescription>
                   </CardHeader>
 
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={handleSubmit} noValidate>
                     <CardContent className="space-y-6 px-10">
                       <div className="space-y-3">
                         <Label htmlFor="email" className="text-sm font-semibold text-slate-700 dark:text-slate-300">

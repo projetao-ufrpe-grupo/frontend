@@ -12,19 +12,26 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useMobile } from "@/hooks/use-mobile"
+import { authService } from "@/lib/services/auth.service"
 import { BookPlus, Building2, Heart, Home, LogOut, Menu, MessageSquare, User } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function Navbar() {
   const pathname = usePathname()
+  const router = useRouter()
   const isMobile = useMobile()
   const [isLoggedIn, setIsLoggedIn] = useState(true)
 
   // Não mostrar navbar nas páginas de login e cadastro
   if (pathname === "/login" || pathname === "/register") {
     return null
+  }
+
+  const logout = async () => {
+    await authService.logout();
+    router.push("/login");
   }
 
   const NavItems = () => (
@@ -140,10 +147,10 @@ export default function Navbar() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="my-2" />
                     <DropdownMenuItem asChild className="rounded-xl p-3">
-                      <Link href="/login" className="flex items-center gap-3 text-red-600 focus:text-red-600">
+                      <Button onClick={logout} variant="outline" className="flex items-center gap-3 text-red-600 focus:text-red-600 w-full">
                         <LogOut size={18} className="text-red-600" />
                         Sair
-                      </Link>
+                      </Button>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -182,10 +189,10 @@ export default function Navbar() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="my-2" />
                     <DropdownMenuItem asChild className="rounded-xl p-3">
-                      <Link href="/login" className="flex items-center gap-3 text-red-600 focus:text-red-600">
+                      <Button onClick={logout} variant="outline" className="flex items-center gap-3 text-red-600 focus:text-red-600 w-full">
                         <LogOut size={18} className="text-red-600" />
                         Sair
-                      </Link>
+                      </Button>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

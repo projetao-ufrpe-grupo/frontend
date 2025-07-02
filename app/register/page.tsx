@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { authService } from "@/lib/services/auth.service"
 import { AnimatePresence, motion } from "framer-motion"
 import { Eye, EyeOff, Home, Loader2, Shield, Sparkles, Users } from "lucide-react"
@@ -17,22 +16,18 @@ import { toast } from "sonner"
 export default function RegisterPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "student" as "student" | "landlord",
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleRadioChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, userType: value as "student" | "landlord" }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,18 +42,19 @@ export default function RegisterPage() {
 
     try {
       const userData = {
-        name: formData.name,
         email: formData.email,
+        lastName: "Teste",
         password: formData.password,
-        phone: "",
-        userType: (formData.userType === "student" ? "LOCATARIO" : "LOCADOR") as "LOCATARIO" | "LOCADOR"
+        passwordConfirm: formData.confirmPassword,
+        name: formData.name
       }
 
       await authService.register(userData)
       toast.success("Conta criada com sucesso!")
-      router.push("/feed")
+      router.push("/login")
     } catch (error) {
       console.error("Registration failed:", error)
+      toast.error("Erro ao criar conta. Por favor, tente novamente.")
     } finally {
       setIsLoading(false)
     }
@@ -281,12 +277,12 @@ export default function RegisterPage() {
                       <CardContent className="space-y-6 px-10">
                         <motion.div variants={itemVariants} className="space-y-3">
                           <Label htmlFor="name" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                            Nome completo
+                            Nome
                           </Label>
                           <Input
                             id="name"
                             name="name"
-                            placeholder="Seu nome completo"
+                            placeholder="Seu nome"
                             value={formData.name}
                             onChange={handleChange}
                             required
@@ -348,52 +344,31 @@ export default function RegisterPage() {
                           >
                             Confirmar senha
                           </Label>
-                          <Input
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            type="password"
-                            placeholder="••••••••"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            required
-                            disabled={isLoading}
-                            className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                          />
+                          <div className="relative">
+                            <Input
+                              id="confirmPassword"
+                              name="confirmPassword"
+                              type={showConfirmPassword ? "text" : "password"}
+                              placeholder="••••••••"
+                              value={formData.confirmPassword}
+                              onChange={handleChange}
+                              required
+                              disabled={isLoading}
+                              className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 pr-14"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-2 top-2 h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              disabled={isLoading}
+                            >
+                              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </Button>
+                          </div>
                         </motion.div>
 
-                        <motion.div variants={itemVariants} className="space-y-4">
-                          <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Você é:</Label>
-                          <RadioGroup
-                            value={formData.userType}
-                            onValueChange={handleRadioChange}
-                            className="grid grid-cols-2 gap-4"
-                            disabled={isLoading}
-                          >
-                            <div className="flex items-center space-x-3 p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white/30 dark:bg-slate-900/30 backdrop-blur-sm hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
-                              <RadioGroupItem value="student" id="student" disabled={isLoading} className="text-purple-600" />
-                              <Label
-                                htmlFor="student"
-                                className="font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
-                              >
-                                Estudante
-                              </Label>
-                            </div>
-                            <div className="flex items-center space-x-3 p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white/30 dark:bg-slate-900/30 backdrop-blur-sm hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
-                              <RadioGroupItem
-                                value="landlord"
-                                id="landlord"
-                                disabled={isLoading}
-                                className="text-purple-600"
-                              />
-                              <Label
-                                htmlFor="landlord"
-                                className="font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
-                              >
-                                Locador
-                              </Label>
-                            </div>
-                          </RadioGroup>
-                        </motion.div>
                       </CardContent>
 
                       <CardFooter className="flex flex-col space-y-6 px-10 pb-10">
