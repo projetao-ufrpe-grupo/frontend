@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BookOpen, Building2, Check, Clock, Mail, MapPin, MessageSquare, School, UserPlus } from "lucide-react"
+import { BookOpen, Building2, Check, Clock, Mail, MapPin, MessageSquare, School, UserPlus, Pencil } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
@@ -137,6 +137,16 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
           {/* Botões de ação */}
           <div className="flex justify-center gap-4">
             {getFriendButton()}
+            <Button
+              variant="outline"
+              className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
+              onClick={() => {
+                window.location.href = `/user/edit/${user.id}`
+              }}
+            >
+              <Pencil size={18} />
+              Editar perfil
+            </Button>
             <Button
               variant="outline"
               className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
