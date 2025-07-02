@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { toast } from 'sonner';
+import { authService } from './services/auth.service';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'https://api.rentalstudendapp.com/v1',
+  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'https://backend-production-e2c0.up.railway.app',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -10,9 +11,9 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const tokens = authService.getAuthTokens();
+    if (tokens?.token) {
+      config.headers.Authorization = `Bearer ${tokens.token}`;
     }
     return config;
   },
@@ -24,18 +25,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Tratamento específico para erro 401 (Não autorizado)
-    if (error.response?.status === 401) {
-      // Redireciona para login se token for inválido/expirado
+    if (error.response?.status === 403) {
       if (typeof window !== "undefined") {
-        // Evita mostrar toast na página de login
+        authService.logout(); // Limpa os tokens e informações do usuário
         if (!window.location.pathname.includes("/login")) {
           toast.error("Sessão expirada. Por favor, faça login novamente.");
         }
         window.location.href = "/login";
       }
     } else {
-      // Mostra mensagem de erro genérica para outros erros
       const message = error.response?.data?.message ?? 'Ocorreu um erro inesperado';
       toast.error(message);
     }

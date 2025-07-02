@@ -2,8 +2,17 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  phone: string;
-  userType: 'LOCADOR' | 'LOCATARIO';
+  roles: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserInfo {
+  id: string;
+  email: string;
+  name: string;
+  lastName: string;
+  roles: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -12,19 +21,23 @@ export interface RegisterUserPayload {
   name: string;
   email: string;
   password: string;
-  phone: string;
-  userType: 'LOCADOR' | 'LOCATARIO';
+  passwordConfirm: string;
 }
 
 export interface LoginUserPayload {
   email: string;
   password: string;
+  rememberMe: boolean;
 }
 
-export type LoginResponse = {
+export interface LoginResponse {
   token: string;
-  user: User;
-};
+  refreshToken: string;
+  expiresIn: {
+    token: number;
+    refreshToken: number;
+  };
+}
 
 export interface ApiResponse<T> {
   data: T;
