@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -561,24 +562,6 @@ function formatAddress(
                     <Plus size={18} />
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.features.map((feature, index) => (
-                    <Badge
-                      key={index}
-                      className="flex items-center gap-2 p-2 rounded-full bg-blue-50 text-blue-700 border-0 dark:bg-blue-900/20 dark:text-blue-300"
-                    >
-                      {feature}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-4 w-4 p-0 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800"
-                        onClick={() => removeFeature(feature)}
-                      >
-                        <X size={12} />
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
@@ -813,26 +796,86 @@ function formatAddress(
     }
   }
 
-  const progressPercent = (currentStep / steps.length) * 100;
+  const progress = (currentStep / steps.length) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container py-10">
         <div className="flex gap-8">
           {/* Sidebar e steps: igual */}
+          {/* Sidebar com Steps Verticais */}
+          <div className="w-80 flex-shrink-0">
+            <div className="sticky top-8">
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent mb-2">
+                  Criar Anúncio
+                </h1>
+                <p className="text-muted-foreground">
+                  Passo {currentStep} de {steps.length}
+                </p>
+              </div>
+
+              <div className="mb-8">
+                <Progress
+                  value={progress}
+                  className="h-2 rounded-full [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600"
+                />
+              </div>
+
+              {/* Steps Verticais */}
+              <div className="space-y-4">
+                {steps.map((step, index) => {
+                  const Icon = step.icon
+                  const isActive = currentStep === step.id
+                  const isCompleted = currentStep > step.id
+                  const isUpcoming = currentStep < step.id
+
+                  return (
+                    <div key={step.id} className="flex items-start gap-4">
+                      {/* Linha conectora */}
+                      {index < steps.length - 1 && (
+                        <div className="absolute left-6 mt-12 w-0.5 h-8 bg-gray-200 dark:bg-gray-700" />
+                      )}
+
+                      {/* Ícone do step */}
+                      <div
+                        className={`relative z-10 w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 ${
+                          isCompleted
+                            ? "bg-green-500 text-white shadow-lg"
+                            : isActive
+                              ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg"
+                              : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600"
+                        }`}
+                      >
+                        {isCompleted ? <Check size={20} /> : <Icon size={20} />}
+                      </div>
+
+                      {/* Conteúdo do step */}
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className={`font-semibold ${
+                            isActive
+                              ? "text-blue-600 dark:text-blue-400"
+                              : isCompleted
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-gray-400 dark:text-gray-600"
+                          }`}
+                        >
+                          {step.title}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">{step.description}</div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
 
           {/* Conteúdo Principal */}
           <div className="flex-1">
             <Card className="rounded-3xl border-0 bg-white/80 backdrop-blur-sm shadow-lg ring-1 ring-gray-900/5 dark:bg-gray-800/80 dark:ring-gray-100/10">
               <CardContent className="p-12">
-
-                {/* Barra de progresso */}
-                <div className="w-full h-3 rounded-full bg-gray-300 dark:bg-gray-700 mb-8 overflow-hidden">
-                  <div
-                    className="h-3 bg-blue-600 dark:bg-blue-500 transition-all duration-300 ease-in-out"
-                    style={{ width: `${progressPercent}%` }}
-                  />
-                </div>
 
                 {renderStepContent()}
 

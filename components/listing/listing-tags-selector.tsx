@@ -17,7 +17,12 @@ export function TagCardsSelector({
   onSelectionChange,
   className = '',
 }: TagCardsSelectorProps) {
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
+    interface Feature {
+    value: string;
+    description: string;
+  }
+
+  const [availableTags, setAvailableTags] = useState<Feature[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>(initialSelected);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -78,14 +83,14 @@ export function TagCardsSelector({
 return (
   <div className={`p-4 rounded-2xl border-2 border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900 ${className}`}>
     <div className="flex flex-wrap gap-3">
-      {availableTags.filter((tag): tag is string => typeof tag === 'string').map(tag => {
-        const isSelected = selectedTags.includes(tag);
+      {availableTags.map(tag => {
+        const isSelected = selectedTags.includes(tag.value);
         return (
           <Button
-            key={tag}
+            key={tag.value}
             type="button"
             variant="outline"
-            onClick={() => toggleTag(tag)}
+            onClick={() => toggleTag(tag.value)}
             className={`
               px-4 py-1.5 rounded-full transition-all text-sm border-2
               ${isSelected
@@ -96,7 +101,7 @@ return (
             `}
           >
             <span className="font-medium capitalize">
-              {formatTagLabel(tag)}
+              {tag.description || formatTagLabel(tag.value)}
             </span>
           </Button>
         );

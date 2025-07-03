@@ -1,21 +1,8 @@
-
 export const FEATURES_MOCK = [
-  "MOBILIADO",
-  "AR_CONDICIONADO",
-  "INTERNET",
-  "ACEITA_PETS",
-  "PISCINA",
-  "CHURRASQUEIRA",
-  "ACADEMIA",
-  "GARAGEM",
-  "VARANDA",
-  "AREA_DE_SERVICO",
-  "PORTARIA_24H",
-  "SALAO_DE_FESTAS",
-  "ELEVADOR",
-  "GAS_ENCANADO",
-  "ARMARIOS_EMBUTIDOS",
-  "LAVANDERIA_NO_LOCAL",
-  "BICICLETARIO",
-  "TRANSPORTE_PUBLICO_PROXIMO"
+  { value: "MOBILIADO", description: "Mobiliado" },
+  { value: "AR_CONDICIONADO", description: "Ar-condicionado" },
+  { value: "INTERNET", description: "Internet" },
+  { value: "ACEITA_PETS", description: "Aceita pets" },
+  { value: "PISCINA", description: "Piscina" },
+  { value: "TRANSPORTE_PUBLICO_PROXIMO", description: "Transporte público próximo" }
 ]

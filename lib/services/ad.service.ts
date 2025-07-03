@@ -17,25 +17,26 @@ export async function getAdById(adId: string): Promise<ApiResponse<Ad>> {
   return response.data; // retorna ApiResponse com data: Ad
 }
 
-export async function getListingsTags(): Promise<ApiResponse<string[]>> {
-  try {
-    const response = await api.get<ApiResponse<string[]>>('/listings/tags');
+interface Caracteristica {
+  value: string
+  description: string
+}
 
-    const validTags = Array.isArray(response.data.data)
-      ? response.data.data.filter((tag): tag is string => typeof tag === 'string')
-      : [];
+export async function getListingsTags(): Promise<ApiResponse<Caracteristica[]>> {
+  try {
+    const response = await api.get<ApiResponse<Caracteristica[]>>('/enums/caracteristicas-imovel')
 
     return {
-      data: validTags.length > 0 ? validTags : FEATURES_MOCK,
+      data: response.data.data,
       status: response.data.status,
       message: response.data.message,
-    };
+    }
   } catch (error) {
-    console.error('Erro ao buscar tags. Usando mock.', error);
+    console.error('Erro ao buscar tags. Usando mock.', error)
     return {
-      data: FEATURES_MOCK,
+      data: FEATURES_MOCK, // certifique-se de que isso tenha o mesmo formato
       status: 200,
       message: 'Retornando mock por falha na API',
-    };
+    }
   }
 }
