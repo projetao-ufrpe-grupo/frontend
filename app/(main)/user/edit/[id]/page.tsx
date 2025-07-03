@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, ChangeEvent, useEffect } from "react";
+import { useState, useRef, ChangeEvent, useEffect, MouseEvent } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,18 +8,26 @@ import { Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/services/auth.service";
+import { enumsService } from "@/lib/services/enums.service";
 import { UserInfo } from "@/lib/services/types";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [formUser, setFormUser] = useState<UserInfo | null>(null);
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
+  const [userInterests, setUserInterests] = useState<
+    { value: string; description: string }[]
+  >([]);
+  const [selectedInterest, setSelectedInterest] = useState<string>("");
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function fetchUser() {
       try {
         const userData = await authService.getCurrentUser();
+        console.log(userData,'userData')
         setUser(userData);
         setFormUser(userData); // inicializa o formulário com os dados originais
       } catch (err) {
@@ -27,7 +35,15 @@ export default function ProfilePage() {
         setFormUser(null);
       }
     }
+    async function fetchInterests() {
+      try {
+        const interests = await enumsService.getUserInterests();
+        console.log(interests, "interesses");
+        setUserInterests(interests);
+      } catch {}
+    }
     fetchUser();
+    fetchInterests();
   }, []);
 
   const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -45,6 +61,24 @@ export default function ProfilePage() {
     }
   };
 
+  useEffect(() => {
+    if (!showDropdown) return;
+    function handleClickOutside(event: Event) {
+      const dropdown = document.getElementById("interesses-dropdown");
+      const input = document.getElementById("interesses");
+      if (
+        dropdown &&
+        !dropdown.contains(event.target as Node) &&
+        input &&
+        !input.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showDropdown]);
+
   if (!user || !formUser) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -60,7 +94,7 @@ export default function ProfilePage() {
           <div
             className="absolute inset-0"
             style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM36 6V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
               backgroundSize: "60px 60px",
             }}
           />
@@ -228,6 +262,73 @@ export default function ProfilePage() {
                     }
                     className="h-12 mt-2 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   />
+                </div>
+                <div className="flex flex-col gap-2 relative">
+                  <Label
+                    htmlFor="interesses"
+                    className="text-lg font-semibold text-slate-700 dark:text-slate-300"
+                  >
+                    Interesses ({selectedInterests.length}/5)
+                  </Label>
+                  <Input
+                    id="interesses"
+                    name="interesses"
+                    type="text"
+                    value={selectedInterests
+                      .map(
+                        (i) =>
+                          userInterests.find((u) => u.value === i)
+                            ?.description || i
+                      )
+                      .join(", ")}
+                    readOnly
+                    onClick={() => setShowDropdown(!showDropdown)}
+                    className="h-12 mt-2 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 cursor-pointer"
+                    placeholder="Selecione os interesses"
+                  />
+                  {showDropdown && (
+                    <div
+                      id="interesses-dropdown"
+                      className="absolute z-20 mt-14 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg max-h-60 overflow-y-auto"
+                    >
+                      {userInterests.map((interest) => {
+                        const isSelected = selectedInterests.includes(interest.value);
+                        const isDisabled = !isSelected && selectedInterests.length >= 5;
+                        
+                        return (
+                          <label
+                            key={interest.value}
+                            className={`flex items-center gap-2 px-4 py-2 cursor-pointer ${
+                              isDisabled 
+                                ? 'opacity-50 cursor-not-allowed' 
+                                : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              disabled={isDisabled}
+                              onChange={() => {
+                                setSelectedInterests((prev) => {
+                                  if (prev.includes(interest.value)) {
+                                    // Remove if already selected
+                                    return prev.filter((i) => i !== interest.value);
+                                  } else {
+                                    // Add only if under the limit of 5
+                                    if (prev.length < 5) {
+                                      return [...prev, interest.value];
+                                    }
+                                    return prev; // Don't add if already at limit
+                                  }
+                                });
+                              }}
+                            />
+                            <span>{interest.description}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
               <Button
