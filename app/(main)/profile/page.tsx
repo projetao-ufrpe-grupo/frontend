@@ -55,7 +55,7 @@ export default function ProfilePage() {
 
   return (
     <>
-    <UserProfilePage />
+      <UserProfilePage params={{ id: "1" }} />
     </>
   )
 }

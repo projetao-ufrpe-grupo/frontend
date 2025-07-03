@@ -43,11 +43,11 @@ export default function RegisterPage() {
     try {
       const userData = {
         email: formData.email,
-        lastName: "Teste",
         password: formData.password,
         passwordConfirm: formData.confirmPassword,
-        name: formData.name
-      }
+        name: formData.name,
+        tipoUsuario: "ESTUDANTE",
+      };
 
       await authService.register(userData)
       toast.success("Conta criada com sucesso!")

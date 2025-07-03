@@ -183,7 +183,7 @@ export default function MyListingsPage() {
                       <Button
                         variant="ghost"
                         className="w-full text-muted-foreground"
-                        onClick={() => updateAdStatus(listing.id, !listing.status)}
+                        onClick={() => updateAdStatus(listing.id)}
                       >
                         <EyeOff size={16} className="mr-2" />
                         {listing.status ? "Pausar anúncio" : "Ativar anúncio"}
