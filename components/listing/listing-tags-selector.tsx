@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getListingsTags } from '@/lib/services/ad.service';
-import { FEATURES_MOCK } from '@/components/features.mock';
 
 interface TagCardsSelectorProps {
   initialSelected?: string[];
@@ -32,34 +31,31 @@ export function TagCardsSelector({
   }, [initialSelected]);
 
   useEffect(() => {
-    async function fetchTags() {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Primeiro tenta buscar da API
-        const response = await getListingsTags();
-        
-        // Se a API retornar dados válidos, usa eles
-        if (response.data && response.data.length > 0) {
-          setAvailableTags(response.data);
-        } else {
-          // Se a API retornar vazio, usa o mock
-          setAvailableTags(FEATURES_MOCK);
-          console.warn('API returned empty data, using mock features');
-        }
-      } catch (err) {
-        // Se a API falhar, usa o mock
-        setAvailableTags(FEATURES_MOCK);
-        setError('Falha ao carregar opções. Mostrando dados de exemplo.');
-        console.error('Failed to fetch tags, using mock data', err);
-      } finally {
-        setLoading(false);
-      }
-    }
+      async function fetchTags() {
+        try {
+          setLoading(true);
+          setError(null);
 
-    fetchTags();
-  }, []);
+          const response = await getListingsTags();
+          console.log('Dados recebidos:', response.data);
+
+          if (response.data && response.data.length > 0) {
+            setAvailableTags(response.data);
+          } else {
+            setError('Nenhuma característica foi retornada pela API.');
+            console.warn('API returned empty data');
+          }
+        } catch (err) {
+          setError('Falha ao carregar características do imóvel.');
+          console.error('Failed to fetch tags:', err);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      fetchTags();
+    }, []);
+
 
   const toggleTag = (tag: string) => {
     const updatedTags = selectedTags.includes(tag)

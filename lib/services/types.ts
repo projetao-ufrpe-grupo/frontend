@@ -28,6 +28,7 @@ export interface RegisterUserPayload {
   email: string;
   password: string;
   passwordConfirm: string;
+  tipoUsuario: string;
 }
 
 export interface LoginUserPayload {
