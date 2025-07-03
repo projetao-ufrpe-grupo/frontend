@@ -36,11 +36,10 @@ export function TagCardsSelector({
           setLoading(true);
           setError(null);
 
-          const response = await getListingsTags();
-          console.log('Dados recebidos:', response.data);
+          const tags = await getListingsTags();
 
-          if (response.data && response.data.length > 0) {
-            setAvailableTags(response.data);
+          if (tags && tags.length > 0) {
+            setAvailableTags(tags);
           } else {
             setError('Nenhuma característica foi retornada pela API.');
             console.warn('API returned empty data');

@@ -23,8 +23,7 @@ import {
   Info,
   MapPin,
   Plus,
-  Upload,
-  X
+  Upload
 } from "lucide-react"
 import { useState } from "react"
 import { Property, Ad } from "@/lib/services/types"
