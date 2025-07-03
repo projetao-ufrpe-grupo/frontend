@@ -12,6 +12,10 @@ export interface UserInfo {
   email: string;
   name: string;
   lastName: string;
+  biografia: string;
+  curso: string;
+  fotoPerfil: string;
+  semestre: number;
   roles: string[];
   createdAt: string;
   updatedAt: string;
