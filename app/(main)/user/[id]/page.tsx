@@ -74,9 +74,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section com padrão hexagonal */}
       <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 overflow-hidden">
-        {/* Padrão hexagonal de fundo */}
         <div className="absolute inset-0 opacity-20">
           <div
             className="absolute inset-0"
@@ -87,7 +85,6 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
           />
         </div>
 
-        {/* Hexágonos decorativos */}
         <div className="absolute inset-0">
           {Array.from({ length: 12 }).map((_, i) => (
             <div
@@ -104,7 +101,6 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
           ))}
         </div>
 
-        {/* Conteúdo do perfil */}
         <div className="relative z-10 container py-16 text-center text-white">
           <Avatar className="h-32 w-32 mx-auto mb-6 ring-4 ring-green-400 ring-offset-4 ring-offset-transparent">
             <AvatarImage src={user.fotoPerfil || "/placeholder.svg"} alt={user.name} />
@@ -113,11 +109,10 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
 
           <h1 className="text-4xl font-bold mb-2">{user.name} {user.lastName}</h1>
 
-          {/* Informações principais */}
           <div className="flex flex-wrap justify-center items-center gap-6 text-blue-100 mb-8">
             <div className="flex items-center gap-2">
               <Building2 size={18} />
-              <span>{user.university || "Universidade não informada"}</span>
+              <span>{user.universidade || "Universidade não informada"}</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin size={18} />
@@ -129,7 +124,6 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
             </div>
           </div>
 
-          {/* Botões de ação */}
           <div className="flex justify-center gap-4">
             {getFriendButton()}
             <Button
@@ -156,7 +150,6 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
         </div>
       </div>
 
-      {/* Conteúdo das abas */}
       <div className="container py-8">
         <Tabs defaultValue="about">
           <TabsList className="mb-6">
@@ -181,8 +174,8 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                     <div className="flex items-center gap-3 p-4 rounded-lg bg-accent/50">
                       <School className="text-primary" size={20} />
                       <div>
-                        <p className="font-medium">Universidade</p>
-                        <p className="text-muted-foreground">{user.university || "Não informada"}</p>
+                        <p className="font-medium">Biografia</p>
+                        <p className="text-muted-foreground">{user.universidade || "Não informada"}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-4 rounded-lg bg-accent/50">
@@ -203,7 +196,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                       <MapPin className="text-primary" size={20} />
                       <div>
                         <p className="font-medium">Região de interesse</p>
-                        <p className="text-muted-foreground">Não informada</p>
+                        <p className="text-muted-foreground">{user.regiaoDeInteresse || "Não informada"}</p>
                       </div>
                     </div>
                   </div>

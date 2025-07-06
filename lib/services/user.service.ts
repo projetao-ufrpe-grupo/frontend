@@ -1,18 +1,9 @@
 import api from "../axios";
+import { UpdateUserProfilePayload } from "./types";
 
-export async function updateUserProfile(
-  userId: string,
-  userData: {
-    name: string;
-    lastName: string;
-    biografia: string;
-    curso: string;
-    fotoPerfil: string;
-    semestre: number;
-  }
-): Promise<void> {
+export async function updateUserProfile(userData: UpdateUserProfilePayload) {
   try {
-    const response = await api.put(`/users/${userId}`, userData);
+    const response = await api.patch(`/account/profile`, userData);
     return response.data;
   } catch (error) {
     console.error("Error updating user profile:", error);

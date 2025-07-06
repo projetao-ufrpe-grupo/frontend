@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/services/auth.service";
 import { enumsService } from "@/lib/services/enums.service";
+import { updateUserProfile } from "@/lib/services/user.service";
 import { UserInfo } from "@/lib/services/types";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<UserInfo | null>(null);
@@ -21,16 +23,21 @@ export default function ProfilePage() {
   const [selectedInterest, setSelectedInterest] = useState<string>("");
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function fetchUser() {
       try {
         const userData = await authService.getCurrentUser();
-        console.log(userData,'userData')
         setUser(userData);
-        setFormUser(userData); // inicializa o formulário com os dados originais
+        setFormUser(userData);
+        // Inicializa os interesses selecionados se existirem
+        if (userData.interesses) {
+          setSelectedInterests(userData.interesses);
+        }
       } catch (err) {
+        console.error("Erro ao buscar usuário:", err);
         setUser(null);
         setFormUser(null);
       }
@@ -38,9 +45,10 @@ export default function ProfilePage() {
     async function fetchInterests() {
       try {
         const interests = await enumsService.getUserInterests();
-        console.log(interests, "interesses");
         setUserInterests(interests);
-      } catch {}
+      } catch (error) {
+        console.error("Erro ao buscar interesses:", error);
+      }
     }
     fetchUser();
     fetchInterests();
@@ -53,8 +61,7 @@ export default function ProfilePage() {
       reader.onload = (ev) => {
         const result = ev.target?.result;
         if (typeof result === "string") {
-          // Se quiser salvar avatar localmente no formulário, adicione avatar ao tipo UserInfo
-          // setFormUser({ ...formUser, avatar: result });
+          setFormUser({ ...formUser, avatar: result });
         }
       };
       reader.readAsDataURL(file);
@@ -78,6 +85,35 @@ export default function ProfilePage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDropdown]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formUser) return;
+
+    setIsUpdating(true);
+
+    try {
+      const updateData = {
+        name: formUser.name,
+        email: formUser.email,
+        biografia: formUser.biografia,
+        curso: formUser.curso,
+        semestre: formUser.semestre,
+        interesses: selectedInterests,
+        regiaoDeInteresse: formUser.regiaoDeInteresse,
+      };
+
+      await updateUserProfile(updateData);
+
+      setUser(formUser);
+      toast.success("Perfil atualizado com sucesso");
+    } catch (error) {
+      toast.error("Erro ao atualizar perfil");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   if (!user || !formUser) {
     return (
@@ -144,13 +180,7 @@ export default function ProfilePage() {
             <CardTitle>Editar perfil de {user.name}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <form
-              className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setUser(formUser); // só atualiza o user ao salvar
-              }}
-            >
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label
@@ -163,9 +193,9 @@ export default function ProfilePage() {
                     id="name"
                     name="name"
                     type="text"
-                    value={formUser.name}
+                    value={formUser?.name ?? ""}
                     onChange={(e) =>
-                      setFormUser({ ...formUser, name: e.target.value })
+                      setFormUser({ ...formUser!, name: e.target.value })
                     }
                     className="h-12 mt-2 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   />
@@ -181,9 +211,9 @@ export default function ProfilePage() {
                     id="lastName"
                     name="lastName"
                     type="text"
-                    value={formUser.lastName}
+                    value={formUser?.lastName ?? ""}
                     onChange={(e) =>
-                      setFormUser({ ...formUser, lastName: e.target.value })
+                      setFormUser({ ...formUser!, lastName: e.target.value })
                     }
                     className="h-12 mt-2 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   />
@@ -199,9 +229,9 @@ export default function ProfilePage() {
                     id="email"
                     name="email"
                     type="email"
-                    value={formUser.email}
+                    value={formUser?.email ?? ""}
                     onChange={(e) =>
-                      setFormUser({ ...formUser, email: e.target.value })
+                      setFormUser({ ...formUser!, email: e.target.value })
                     }
                     className="h-12 mt-2 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   />
@@ -217,9 +247,9 @@ export default function ProfilePage() {
                     id="biografia"
                     name="biografia"
                     type="text"
-                    value={formUser.biografia}
+                    value={formUser?.biografia ?? ""}
                     onChange={(e) =>
-                      setFormUser({ ...formUser, biografia: e.target.value })
+                      setFormUser({ ...formUser!, biografia: e.target.value })
                     }
                     className="h-12 mt-2 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   />
@@ -235,9 +265,9 @@ export default function ProfilePage() {
                     id="curso"
                     name="curso"
                     type="text"
-                    value={formUser.curso}
+                    value={formUser?.curso ?? ""}
                     onChange={(e) =>
-                      setFormUser({ ...formUser, curso: e.target.value })
+                      setFormUser({ ...formUser!, curso: e.target.value })
                     }
                     className="h-12 mt-2 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   />
@@ -253,89 +283,116 @@ export default function ProfilePage() {
                     id="semestre"
                     name="semestre"
                     type="number"
-                    value={formUser.semestre}
+                    value={formUser?.semestre ?? 0}
                     onChange={(e) =>
                       setFormUser({
-                        ...formUser,
-                        semestre: Number(e.target.value),
+                        ...formUser!,
+                        semestre: Number(e.target.value) || 0,
                       })
                     }
                     className="h-12 mt-2 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   />
                 </div>
-                <div className="flex flex-col gap-2 relative">
+                <div>
                   <Label
-                    htmlFor="interesses"
+                    htmlFor="regiaoDeInteresse"
                     className="text-lg font-semibold text-slate-700 dark:text-slate-300"
                   >
-                    Interesses ({selectedInterests.length}/5)
+                    Região de interesse
                   </Label>
                   <Input
-                    id="interesses"
-                    name="interesses"
+                    id="regiaoDeInteresse"
+                    name="regiaoDeInteresse"
                     type="text"
-                    value={selectedInterests
+                    value={formUser?.regiaoDeInteresse ?? ""}
+                    onChange={(e) =>
+                      setFormUser({
+                        ...formUser!,
+                        regiaoDeInteresse: e.target.value,
+                      })
+                    }
+                    className="h-12 mt-2 rounded-2xl w-full border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 relative">
+                <Label
+                  htmlFor="interesses"
+                  className="text-lg font-semibold text-slate-700 dark:text-slate-300"
+                >
+                  Interesses ({selectedInterests.length}/5)
+                </Label>
+                <Input
+                  id="interesses"
+                  name="interesses"
+                  type="text"
+                  value={
+                    selectedInterests
                       .map(
                         (i) =>
                           userInterests.find((u) => u.value === i)
                             ?.description || i
                       )
-                      .join(", ")}
-                    readOnly
-                    onClick={() => setShowDropdown(!showDropdown)}
-                    className="h-12 mt-2 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 cursor-pointer"
-                    placeholder="Selecione os interesses"
-                  />
-                  {showDropdown && (
-                    <div
-                      id="interesses-dropdown"
-                      className="absolute z-20 mt-14 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg max-h-60 overflow-y-auto"
-                    >
-                      {userInterests.map((interest) => {
-                        const isSelected = selectedInterests.includes(interest.value);
-                        const isDisabled = !isSelected && selectedInterests.length >= 5;
-                        
-                        return (
-                          <label
-                            key={interest.value}
-                            className={`flex items-center gap-2 px-4 py-2 cursor-pointer ${
-                              isDisabled 
-                                ? 'opacity-50 cursor-not-allowed' 
-                                : 'hover:bg-slate-100 dark:hover:bg-slate-800'
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              disabled={isDisabled}
-                              onChange={() => {
-                                setSelectedInterests((prev) => {
-                                  if (prev.includes(interest.value)) {
-                                    // Remove if already selected
-                                    return prev.filter((i) => i !== interest.value);
-                                  } else {
-                                    // Add only if under the limit of 5
-                                    if (prev.length < 5) {
-                                      return [...prev, interest.value];
-                                    }
-                                    return prev; // Don't add if already at limit
+                      .join(", ") || ""
+                  }
+                  readOnly
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="h-12 w-full mt-2 rounded-2xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm text-lg text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 cursor-pointer"
+                  placeholder="Selecione os interesses"
+                />
+                {showDropdown && (
+                  <div
+                    id="interesses-dropdown"
+                    className="absolute z-20 mt-14 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg max-h-60 overflow-y-auto"
+                  >
+                    {userInterests.map((interest) => {
+                      const isSelected = selectedInterests.includes(
+                        interest.value
+                      );
+                      const isDisabled =
+                        !isSelected && selectedInterests.length >= 5;
+
+                      return (
+                        <label
+                          key={interest.value}
+                          className={`flex items-center gap-2 px-4 py-2 cursor-pointer ${
+                            isDisabled
+                              ? "opacity-50 cursor-not-allowed"
+                              : "hover:bg-slate-100 dark:hover:bg-slate-800"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            disabled={isDisabled}
+                            onChange={() => {
+                              setSelectedInterests((prev) => {
+                                if (prev.includes(interest.value)) {
+                                  return prev.filter(
+                                    (i) => i !== interest.value
+                                  );
+                                } else {
+                                  if (prev.length < 5) {
+                                    return [...prev, interest.value];
                                   }
-                                });
-                              }}
-                            />
-                            <span>{interest.description}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                                  return prev;
+                                }
+                              });
+                            }}
+                          />
+                          <span>{interest.description}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <Button
                 type="submit"
-                className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                disabled={isUpdating}
+                className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Salvar alterações
+                {isUpdating ? "Salvando..." : "Salvar alterações"}
               </Button>
             </form>
           </CardContent>

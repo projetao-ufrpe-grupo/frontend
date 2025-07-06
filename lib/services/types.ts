@@ -13,18 +13,16 @@ export interface UserInfo {
   name: string;
   lastName: string;
   biografia: string;
-  curso: string;
   fotoPerfil: string;
-  semestre: number;
   roles: string[];
   createdAt: string;
   updatedAt: string;
-  avatar?: string; // URL do avatar do usuário, opcional
-  university?: string; // Universidade do usuário, opcional
-  course?: string; // Curso do usuário, opcional
-  bio?: string; // Biografia do usuário, opcional
-  rating?: number; // Avaliação do usuário, opcional
-  responseTime?: number; // Tempo médio de resposta em horas, opcional
+  avatar?: string;
+  universidade?: string;
+  curso?: string;
+  semestre?: number;
+  regiaoDeInteresse?: string;
+  interesses?: string[];
 }
 
 export interface RegisterUserPayload {
@@ -54,7 +52,7 @@ export interface ApiResponse<T> {
   data: T;
   message?: string;
   status: number;
-} 
+}
 
 export interface Property {
   id: string;
@@ -91,4 +89,16 @@ export interface Ad {
   // Expansões para facilitar no front:
   imovel?: Property;
   anunciante?: User; // usar User aqui
+}
+
+export interface UpdateUserProfilePayload {
+  email?: string;
+  name?: string;
+  password?: string;
+  semestre?: number;
+  tipoUsuario?: string;
+  biografia?: string;
+  curso?: string;
+  regiaoDeInteresse?: string;
+  interesses?: string[];
 }
