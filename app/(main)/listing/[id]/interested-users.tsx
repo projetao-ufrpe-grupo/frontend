@@ -253,16 +253,13 @@ export default function InterestedUsers({ interestedUsers }: { interestedUsers: 
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
+                      <Link
+                        href={`/chats?user=${user.id}`}
                         className="p-2 rounded-full hover:bg-muted transition-colors"
-                        onClick={() => {
-                          window.location.href = `/chats?user=${user.id}`
-                        }}
                         aria-label={`Enviar mensagem para ${user.name}`}
-                        role="link"
                       >
                         <MessageSquare size={16} />
-                      </button>
+                      </Link>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Enviar mensagem para {user.name}</p>
