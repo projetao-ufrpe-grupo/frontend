@@ -8,45 +8,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookOpen, Building2, Check, Clock, Mail, MapPin, MessageSquare, School, UserPlus, Pencil } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useState } from "react"
-
-// Dados simulados do usuário
-const userData = {
-  id: "123",
-  name: "João Santos",
-  email: "joao.santos@email.com",
-  bio: "Estudante de Ciência da Computação na UFMG, apaixonado por tecnologia e música. Procurando um lugar tranquilo para morar e estudar.",
-  avatar: "/placeholder.svg?height=200&width=200",
-  university: "UFMG",
-  course: "Ciência da Computação",
-  semester: "7º",
-  location: "Belo Horizonte, MG",
-  targetLocation: "Pampulha, Belo Horizonte - MG",
-  interests: ["Tecnologia", "Música", "Esportes", "Jogos", "Cinema"],
-  friendStatus: "none", // 'none', 'pending', 'friends'
-  properties: [
-    {
-      id: "1",
-      title: "Kitnet moderna perto da UFMG",
-      price: 800,
-      location: "Pampulha, Belo Horizonte - MG",
-      image: "/placeholder.svg?height=300&width=500",
-    },
-  ],
-}
+import { useState, useEffect } from "react"
+import { authService } from "@/lib/services/auth.service"
+import { UserInfo } from "@/lib/services/types"
 
 export default function UserProfilePage({ params }: { params: { id: string } }) {
-  const [user, setUser] = useState(userData)
+  const [user, setUser] = useState<UserInfo | null>(null)
+  const [friendStatus, setFriendStatus] = useState<"none" | "pending" | "friends">("none")
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
+      } catch (err) {
+        setUser(null);
+      }
+    }
+    fetchUser();
+  }, []);
 
   const handleFriendRequest = () => {
-    setUser({
-      ...user,
-      friendStatus: user.friendStatus === "none" ? "pending" : "none",
-    })
+    setFriendStatus(friendStatus === "none" ? "pending" : "none")
   }
 
   const getFriendButton = () => {
-    switch (user.friendStatus) {
+    switch (friendStatus) {
       case "none":
         return (
           <Button onClick={handleFriendRequest} className="flex items-center gap-2">
@@ -77,11 +64,17 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
     }
   }
 
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        Carregando...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
-      {/* Hero Section com padrão hexagonal */}
       <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 overflow-hidden">
-        {/* Padrão hexagonal de fundo */}
         <div className="absolute inset-0 opacity-20">
           <div
             className="absolute inset-0"
@@ -92,7 +85,6 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
           />
         </div>
 
-        {/* Hexágonos decorativos */}
         <div className="absolute inset-0">
           {Array.from({ length: 12 }).map((_, i) => (
             <div
@@ -109,24 +101,22 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
           ))}
         </div>
 
-        {/* Conteúdo do perfil */}
         <div className="relative z-10 container py-16 text-center text-white">
           <Avatar className="h-32 w-32 mx-auto mb-6 ring-4 ring-green-400 ring-offset-4 ring-offset-transparent">
-            <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+            <AvatarImage src={user.fotoPerfil || "/placeholder.svg"} alt={user.name} />
             <AvatarFallback className="text-2xl bg-white text-blue-600">{user.name.charAt(0)}</AvatarFallback>
           </Avatar>
 
-          <h1 className="text-4xl font-bold mb-2">{user.name}</h1>
+          <h1 className="text-4xl font-bold mb-2">{user.name} {user.lastName}</h1>
 
-          {/* Informações principais */}
           <div className="flex flex-wrap justify-center items-center gap-6 text-blue-100 mb-8">
             <div className="flex items-center gap-2">
               <Building2 size={18} />
-              <span>{user.university}</span>
+              <span>{user.universidade || "Universidade não informada"}</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin size={18} />
-              <span>{user.location}</span>
+              <span>Localização não informada</span>
             </div>
             <div className="flex items-center gap-2">
               <Mail size={18} />
@@ -134,7 +124,6 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
             </div>
           </div>
 
-          {/* Botões de ação */}
           <div className="flex justify-center gap-4">
             {getFriendButton()}
             <Button
@@ -161,7 +150,6 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
         </div>
       </div>
 
-      {/* Conteúdo das abas */}
       <div className="container py-8">
         <Tabs defaultValue="about">
           <TabsList className="mb-6">
@@ -177,7 +165,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <p className="text-muted-foreground">{user.bio}</p>
+                  <p className="text-muted-foreground">{user.biografia || "Biografia não informada"}</p>
                 </div>
 
                 <div>
@@ -186,29 +174,29 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                     <div className="flex items-center gap-3 p-4 rounded-lg bg-accent/50">
                       <School className="text-primary" size={20} />
                       <div>
-                        <p className="font-medium">Universidade</p>
-                        <p className="text-muted-foreground">{user.university}</p>
+                        <p className="font-medium">Biografia</p>
+                        <p className="text-muted-foreground">{user.universidade || "Não informada"}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-4 rounded-lg bg-accent/50">
                       <BookOpen className="text-primary" size={20} />
                       <div>
                         <p className="font-medium">Curso</p>
-                        <p className="text-muted-foreground">{user.course}</p>
+                        <p className="text-muted-foreground">{user.curso || "Não informado"}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-4 rounded-lg bg-accent/50">
                       <BookOpen className="text-primary" size={20} />
                       <div>
                         <p className="font-medium">Semestre</p>
-                        <p className="text-muted-foreground">{user.semester}</p>
+                        <p className="text-muted-foreground">{user.semestre ? `${user.semestre}º` : "Não informado"}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-4 rounded-lg bg-accent/50">
                       <MapPin className="text-primary" size={20} />
                       <div>
                         <p className="font-medium">Região de interesse</p>
-                        <p className="text-muted-foreground">{user.targetLocation}</p>
+                        <p className="text-muted-foreground">{user.regiaoDeInteresse || "Não informada"}</p>
                       </div>
                     </div>
                   </div>
@@ -225,11 +213,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-3">
-                  {user.interests.map((interest, index) => (
-                    <Badge key={index} variant="secondary" className="p-3 text-sm">
-                      {interest}
-                    </Badge>
-                  ))}
+                  <p className="text-muted-foreground">Interesses não informados</p>
                 </div>
               </CardContent>
             </Card>
@@ -241,38 +225,9 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                 <CardTitle>Anúncios de {user.name.split(" ")[0]}</CardTitle>
               </CardHeader>
               <CardContent>
-                {user.properties.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {user.properties.map((property) => (
-                      <Card key={property.id} className="overflow-hidden">
-                        <div className="aspect-video relative">
-                          <Image
-                            src={property.image || "/placeholder.svg"}
-                            alt={property.title}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold mb-2">{property.title}</h3>
-                          <div className="flex justify-between items-center mb-4">
-                            <span className="text-primary font-medium text-lg">R$ {property.price}/mês</span>
-                            <span className="text-sm text-muted-foreground">{property.location}</span>
-                          </div>
-                          <Link href={`/listing/${property.id}`}>
-                            <Button variant="outline" className="w-full">
-                              Ver detalhes
-                            </Button>
-                          </Link>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">
-                    {user.name.split(" ")[0]} não possui anúncios no momento.
-                  </p>
-                )}
+                <p className="text-muted-foreground text-center py-8">
+                  {user.name.split(" ")[0]} não possui anúncios no momento.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
