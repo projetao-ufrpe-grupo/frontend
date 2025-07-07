@@ -1,5 +1,5 @@
 import api from '../axios';
-import { ApiResponse } from './types';
+import { Anuncio, ApiResponse } from './types';
 
 interface CriarAnuncioPayload {
   aluguel: number;
@@ -20,31 +20,6 @@ interface CriarAnuncioPayload {
   bairro: string;
   complemento: string;
   caracteristicas: string[];
-}
-
-interface Anuncio {
-  id: string;
-  aluguel: number;
-  condominio: number;
-  caucao: number;
-  duracaoMinimaContrato: number;
-  area: number;
-  descricao: string;
-  tipo: string;
-  dataDisponibilidade: string;
-  qtdQuartos: number;
-  qtdBanheiros: number;
-  cep: string;
-  cidade: string;
-  estado: string;
-  logradouro: string;
-  numero: string;
-  bairro: string;
-  complemento: string;
-  caracteristicas: string[];
-  fotos: string[];
-  createdAt: string;
-  updatedAt: string;
 }
 
 class AnuncioService {

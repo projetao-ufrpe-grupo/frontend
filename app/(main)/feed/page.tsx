@@ -6,104 +6,11 @@ import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { anuncioService } from "@/lib/services/anuncio.service"
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, LayoutGrid, List, Search } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import FilterSidebar from "./filter-sidebar"
 import PropertyCard from "./property-card"
-
-// Dados simulados de propriedades
-const properties = [
-  {
-    id: "1",
-    title: "Apartamento próximo à USP",
-    description: "Apartamento de 2 quartos, mobiliado, a 5 minutos da USP",
-    price: 1200,
-    location: "Butantã, São Paulo - SP",
-    university: "USP",
-    distance: "500m",
-    bedrooms: 2,
-    bathrooms: 1,
-    area: 65,
-    images: ["/placeholder.svg?height=300&width=500"],
-    features: ["Mobiliado", "Internet", "Lavanderia"],
-    type: "Apartamento",
-  },
-  {
-    id: "2",
-    title: "Kitnet moderna perto da UFMG",
-    description: "Kitnet reformada com ótima localização, próxima ao campus Pampulha",
-    price: 800,
-    location: "Pampulha, Belo Horizonte - MG",
-    university: "UFMG",
-    distance: "800m",
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 30,
-    images: ["/placeholder.svg?height=300&width=500"],
-    features: ["Mobiliado", "Segurança 24h", "Academia"],
-    type: "Kitnet",
-  },
-  {
-    id: "3",
-    title: "Casa compartilhada para estudantes da UFRJ",
-    description: "Quartos individuais em casa compartilhada, ambiente tranquilo para estudos",
-    price: 700,
-    location: "Ilha do Fundão, Rio de Janeiro - RJ",
-    university: "UFRJ",
-    distance: "1.2km",
-    bedrooms: 1,
-    bathrooms: 2,
-    area: 20,
-    images: ["/placeholder.svg?height=300&width=500"],
-    features: ["Quarto individual", "Cozinha compartilhada", "Área de estudos"],
-    type: "Quarto",
-  },
-  {
-    id: "4",
-    title: "Apartamento espaçoso próximo à UNICAMP",
-    description: "Apartamento de 3 quartos, ideal para compartilhar com outros estudantes",
-    price: 1800,
-    location: "Barão Geraldo, Campinas - SP",
-    university: "UNICAMP",
-    distance: "1km",
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 90,
-    images: ["/placeholder.svg?height=300&width=500"],
-    features: ["Varanda", "Garagem", "Área de lazer"],
-    type: "Apartamento",
-  },
-  {
-    id: "5",
-    title: "Studio moderno próximo à PUC",
-    description: "Studio completo, recém reformado, a poucos minutos da PUC",
-    price: 1500,
-    location: "Consolação, São Paulo - SP",
-    university: "PUC-SP",
-    distance: "400m",
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 40,
-    images: ["/placeholder.svg?height=300&width=500"],
-    features: ["Mobiliado", "Portaria 24h", "Academia"],
-    type: "Studio",
-  },
-  {
-    id: "6",
-    title: "Quarto em república próximo à UFPE",
-    description: "Quarto individual em república estabelecida, ambiente amigável",
-    price: 600,
-    location: "Cidade Universitária, Recife - PE",
-    university: "UFPE",
-    distance: "600m",
-    bedrooms: 1,
-    bathrooms: 2,
-    area: 15,
-    images: ["/placeholder.svg?height=300&width=500"],
-    features: ["Internet", "Limpeza semanal", "Área comum"],
-    type: "Quarto",
-  },
-]
 
 // Universidades populares
 const popularUniversities = ["USP", "UFRJ", "UFMG", "UNICAMP", "UnB", "UFPE", "PUC"]
@@ -113,7 +20,21 @@ export default function FeedPage() {
   const [timeFilter, setTimeFilter] = useState("all")
   const [openFilter, setOpenFilter] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [anuncios, setAnuncios] = useState<any[]>([])
   const totalPages = 15
+
+  useEffect(() => {
+    const fetchAnuncios = async () => {
+      try {
+        const response = await anuncioService.listar()
+        setAnuncios(response.data)
+      } catch (error) {
+        console.error("Erro ao buscar anúncios:", error)
+      }
+    }
+
+    fetchAnuncios()
+  }, [])
 
   // Função para gerar os números de página visíveis
   const getVisiblePages = () => {
@@ -319,8 +240,8 @@ export default function FeedPage() {
                     : "flex flex-col gap-6"
                 }
               >
-                {properties.map((property) => (
-                  <PropertyCard key={property.id} property={property} viewMode={viewMode} />
+                {anuncios.map((anuncio) => (
+                  <PropertyCard key={anuncio.id} property={anuncio} viewMode={viewMode} />
                 ))}
               </div>
             </TabsContent>
@@ -333,10 +254,10 @@ export default function FeedPage() {
                     : "flex flex-col gap-6"
                 }
               >
-                {properties
-                  .filter((p) => p.type === "Apartamento" || p.type === "Studio")
-                  .map((property) => (
-                    <PropertyCard key={property.id} property={property} viewMode={viewMode} />
+                {anuncios
+                  .filter((p) => p.tipo === "APARTAMENTO" || p.tipo === "STUDIO")
+                  .map((anuncio) => (
+                    <PropertyCard key={anuncio.id} property={anuncio} viewMode={viewMode} />
                   ))}
               </div>
             </TabsContent>
@@ -349,10 +270,10 @@ export default function FeedPage() {
                     : "flex flex-col gap-6"
                 }
               >
-                {properties
-                  .filter((p) => p.type === "Quarto" || p.type === "Kitnet")
-                  .map((property) => (
-                    <PropertyCard key={property.id} property={property} viewMode={viewMode} />
+                {anuncios
+                  .filter((p) => p.tipo === "QUARTO" || p.tipo === "KITNET")
+                  .map((anuncio) => (
+                    <PropertyCard key={anuncio.id} property={anuncio} viewMode={viewMode} />
                   ))}
               </div>
             </TabsContent>
@@ -365,10 +286,10 @@ export default function FeedPage() {
                     : "flex flex-col gap-6"
                 }
               >
-                {properties
-                  .filter((p) => p.type === "Casa")
-                  .map((property) => (
-                    <PropertyCard key={property.id} property={property} viewMode={viewMode} />
+                {anuncios
+                  .filter((p) => p.tipo === "CASA")
+                  .map((anuncio) => (
+                    <PropertyCard key={anuncio.id} property={anuncio} viewMode={viewMode} />
                   ))}
               </div>
             </TabsContent>

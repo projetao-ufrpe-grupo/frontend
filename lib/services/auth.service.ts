@@ -1,7 +1,7 @@
 // Funções de autenticação para registro, login, obtenção do usuário atual e logout
 
 import api from '../axios';
-import { ApiResponse, LoginResponse, LoginUserPayload, RegisterUserPayload, User, UserInfo } from './types';
+import { ApiResponse, LoginResponse, LoginUserPayload, RegisterUserPayload, User } from './types';
 
 interface AuthTokens {
   token: string;
@@ -10,6 +10,18 @@ interface AuthTokens {
     token: number;
     refreshToken: number;
   }
+}
+
+type PrivacidadePerfil = "PUBLICO" | "PRIVADO" | "APENAS_LOCADORES";
+
+interface UserInfo {
+  id: string;
+  email: string;
+  name: string;
+  roles: string[];
+  tipoUsuario: string;
+  interesses: string[];
+  privacidadePerfil: PrivacidadePerfil;
 }
 
 class AuthService {
@@ -36,6 +48,11 @@ class AuthService {
 
   async getCurrentUser(): Promise<UserInfo> {
     const response = await api.get<UserInfo>('/account/me');
+    return response.data;
+  }
+
+  async getUserById(id: string): Promise<UserInfo> {
+    const response = await api.get(`/account/user/${id}`);
     return response.data;
   }
 
@@ -70,6 +87,17 @@ class AuthService {
   async logout(): Promise<void> {
     localStorage.removeItem(this.AUTH_TOKENS_KEY);
     localStorage.removeItem(this.USER_INFO_KEY);
+  }
+
+  async atualizarPrivacidade(privacidade: PrivacidadePerfil): Promise<ApiResponse<UserInfo>> {
+    const response = await api.put<UserInfo>('/account/privacy', {
+      privacidadePerfil: privacidade
+    });
+    
+    // Atualiza as informações do usuário no localStorage
+    this.setUserInfo(response.data);
+    
+    return { data: response.data, status: response.status };
   }
 }
 

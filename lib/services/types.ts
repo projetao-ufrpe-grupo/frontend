@@ -50,7 +50,6 @@ export interface LoginResponse {
 
 export interface ApiResponse<T> {
   data: T;
-  message?: string;
   status: number;
 }
 
@@ -101,4 +100,26 @@ export interface UpdateUserProfilePayload {
   curso?: string;
   regiaoDeInteresse?: string;
   interesses?: string[];
+}
+
+export interface Anuncio {
+  id: string;
+  aluguel: number;
+  condominio: number;
+  caucao: number;
+  duracaoMinimaContrato: number;
+  pausado: boolean;
+  descricao: string;
+  tipo: string;
+  qtdQuartos: number;
+  qtdBanheiros: number;
+  area: number;
+  dataDisponibilidade: string;
+  enderecoCompleto: string;
+  caracteristicas: string[];
+  fotosBase64: string[];
+  anunciante: {
+    id: string;
+    name: string;
+  };
 }

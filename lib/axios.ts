@@ -3,7 +3,8 @@ import { toast } from 'sonner';
 import { authService } from './services/auth.service';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'https://backend-production-e2c0.up.railway.app',
+  // baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'https://backend-production-e2c0.up.railway.app',
+  baseURL: 'http://localhost:8080',
   headers: {
     'Content-Type': 'application/json',
   },

@@ -1,32 +1,43 @@
 "use client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BookOpen, Building2, Check, Clock, Mail, MapPin, MessageSquare, School, UserPlus, Pencil } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import { useState, useEffect } from "react"
 import { authService } from "@/lib/services/auth.service"
 import { UserInfo } from "@/lib/services/types"
+import { BookOpen, Building2, Check, Clock, Mail, MapPin, MessageSquare, School, UserPlus } from "lucide-react"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 export default function UserProfilePage({ params }: { params: { id: string } }) {
   const [user, setUser] = useState<UserInfo | null>(null)
   const [friendStatus, setFriendStatus] = useState<"none" | "pending" | "friends">("none")
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchUser() {
+    const fetchUser = async () => {
       try {
-        const userData = await authService.getCurrentUser();
-        setUser(userData);
-      } catch (err) {
-        setUser(null);
+        const response = await authService.getUserById(params.id)
+        const userInfo: UserInfo = {
+          ...response,
+          lastName: "",
+          biografia: "",
+          fotoPerfil: "",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+        setUser(userInfo)
+      } catch (error) {
+        console.error('Erro ao carregar usuário:', error)
+        toast.error('Erro ao carregar informações do usuário')
+      } finally {
+        setLoading(false)
       }
     }
-    fetchUser();
-  }, []);
+
+    fetchUser()
+  }, [params.id])
 
   const handleFriendRequest = () => {
     setFriendStatus(friendStatus === "none" ? "pending" : "none")
@@ -64,10 +75,18 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
     }
   }
 
-  if (!user) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         Carregando...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        Usuário não encontrado
       </div>
     );
   }
@@ -130,21 +149,11 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
               variant="outline"
               className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
               onClick={() => {
-                window.location.href = `/user/edit/${user.id}`
-              }}
-            >
-              <Pencil size={18} />
-              Editar perfil
-            </Button>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
-              onClick={() => {
                 window.location.href = `/chats?user=${user.id}`
               }}
             >
               <MessageSquare size={18} />
-              Mensagem
+              Enviar mensagem
             </Button>
           </div>
         </div>
@@ -174,7 +183,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                     <div className="flex items-center gap-3 p-4 rounded-lg bg-accent/50">
                       <School className="text-primary" size={20} />
                       <div>
-                        <p className="font-medium">Biografia</p>
+                        <p className="font-medium">Universidade</p>
                         <p className="text-muted-foreground">{user.universidade || "Não informada"}</p>
                       </div>
                     </div>
