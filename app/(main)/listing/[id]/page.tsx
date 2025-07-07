@@ -267,7 +267,8 @@ export default function ListingPage({ params }: { params: Promise<{ id: string }
           {/* Lista de Usuários Interessados */}
           <Card>
             <CardContent className="pt-8 flex-1 flex flex-col">
-              <InterestedUsers />
+              {/* TODO: Chamar aqui a função que retorna os usuários interessados por um anúncio */}
+              <InterestedUsers interestedUsers={[]} />
             </CardContent>
           </Card>
         </div>
