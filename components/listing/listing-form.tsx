@@ -210,6 +210,7 @@ function formatAddress(
     setIsSubmitting(true);
     
     try {
+
       // Validar campos obrigatórios
       if (!formData.tipo || !formData.logradouro || !formData.cidade || !formData.estado || !formData.cep
         || !formData.qtd_quartos || !formData.qtd_banheiros || !formData.area || !formData.aluguel
@@ -254,6 +255,8 @@ function formatAddress(
         caracteristicas: formData.features
       };
 
+      
+
       if (mode === 'edit' && initialData?.id) {
         await anuncioService.atualizar(initialData.id, requestPayload, selectedFiles);
         toast.success('Anúncio atualizado com sucesso!');
@@ -266,6 +269,15 @@ function formatAddress(
     } catch (error) {
       console.error('Erro ao criar anúncio:', error);
       toast.error('Erro ao criar anúncio. Por favor, tente novamente.');
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        (error as any).response?.status === 422
+      ) {
+        const validationErrors = (error as any).response.data?.items || {};
+        console.error('Erros de validação:', validationErrors);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -767,9 +779,6 @@ function formatAddress(
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Arraste suas fotos aqui</h3>
                   <p className="text-muted-foreground mb-4">ou clique para selecionar arquivos</p>
-                  <Button variant="outline" className="rounded-2xl" type="button">
-                    Selecionar fotos
-                  </Button>
                 </label>
               </div>
 

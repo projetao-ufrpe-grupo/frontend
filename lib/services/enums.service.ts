@@ -1,11 +1,11 @@
 import api from "../axios";
 
-interface UserInterestResponse {
+export interface UserInterestResponse {
     value: string;
     description: string;
 }
 
-class EnumsService {
+export class EnumsService {
     async getUserInterests(): Promise<UserInterestResponse[]> {
         const response = await api.get<UserInterestResponse[]>('/enums/interesses-usuario');
         return response.data;

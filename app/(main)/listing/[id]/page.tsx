@@ -19,17 +19,18 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import InterestedUsers from "./interested-users"
 
-export default function ListingPage({ params }: { params: { id: string } }) {
+export default function ListingPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const [anuncio, setAnuncio] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchAnuncio = async () => {
       try {
-        const response = await anuncioService.buscarPorId(params.id)
+        const response = await anuncioService.buscarPorId(id)
         setAnuncio(response.data)
       } catch (error) {
         console.error("Erro ao buscar anúncio:", error)
@@ -38,8 +39,8 @@ export default function ListingPage({ params }: { params: { id: string } }) {
       }
     }
 
-    fetchAnuncio()
-  }, [params.id])
+    if (id) fetchAnuncio()
+  }, [id])
 
   if (loading) {
     return (
