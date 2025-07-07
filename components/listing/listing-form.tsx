@@ -211,8 +211,12 @@ function formatAddress(
     
     try {
       // Validar campos obrigatórios
-      if (!formData.tipo || !formData.logradouro || !formData.cidade || !formData.estado) {
-        toast.error("Por favor, preencha todos os campos obrigatórios (Tipo, Endereço, Cidade e Estado)");
+      if (!formData.tipo || !formData.logradouro || !formData.cidade || !formData.estado || !formData.cep
+        || !formData.qtd_quartos || !formData.qtd_banheiros || !formData.area || !formData.aluguel
+        || !formData.duracao_minima_contrato || !formData.description || !formData.features.length
+        || !formData.availableFrom
+      ) {
+        toast.error("Por favor, preencha todos os campos obrigatórios");
         return;
       }
 
@@ -247,7 +251,7 @@ function formatAddress(
         numero: formData.numero,
         bairro: formData.bairro,
         complemento: formData.complemento || "",
-        caracteristicas: mapCaracteristicas(formData.features)
+        caracteristicas: formData.features
       };
 
       if (mode === 'edit' && initialData?.id) {
@@ -258,7 +262,7 @@ function formatAddress(
         toast.success('Anúncio criado com sucesso!');
       }
 
-      router.push('/meus-anuncios');
+      router.push('/my-listings');
     } catch (error) {
       console.error('Erro ao criar anúncio:', error);
       toast.error('Erro ao criar anúncio. Por favor, tente novamente.');
@@ -429,7 +433,7 @@ function formatAddress(
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <Label htmlFor="city" className="text-base font-medium">
-                    Cidade
+                    Cidade*
                   </Label>
                   <Input
                     id="city"
@@ -441,7 +445,7 @@ function formatAddress(
                 </div>
                 <div className="space-y-3">
                   <Label htmlFor="state" className="text-base font-medium">
-                    Estado
+                    Estado*
                   </Label>
                   <StateSelect 
                     value={formData.estado} 
@@ -452,20 +456,29 @@ function formatAddress(
               </div>
               <div className="space-y-3">
                 <Label htmlFor="zipCode" className="text-base font-medium">
-                  CEP
+                  CEP*
                 </Label>
                 <Input
                   id="zipCode"
                   placeholder="00000-000"
                   value={formData.cep}
                   onChange={(e) => {
+                    // Remove todos os não-dígitos e formata
                     const value = e.target.value.replace(/\D/g, '');
-                    const formatted = value.replace(/^(\d{5})(\d)/, '$1-$2');
+                    const formatted = value.length > 5 
+                      ? `${value.slice(0, 5)}-${value.slice(5, 8)}` 
+                      : value;
+                    
                     setFormData({...formData, cep: formatted});
                   }}
-                  className="h-12 rounded-xl"
+                  className={`h-12 rounded-xl ${
+                    formData.cep.replace(/\D/g, '').length !== 8 && formData.cep ? 'border-red-500' : ''
+                  }`}
                   maxLength={9}
                 />
+                {formData.cep && formData.cep.replace(/\D/g, '').length !== 8 && (
+                  <p className="text-sm text-red-500 mt-1">O CEP deve conter exatamente 8 dígitos</p>
+                )}
               </div>
             </div>
           </div>
@@ -528,11 +541,55 @@ function formatAddress(
                     Área (m²)
                   </Label>
                   <Input
+                    type="number"
                     id="area"
                     placeholder="50"
                     value={formData.area}
                     onChange={(e) => setFormData({ ...formData, area: e.target.value })}
                     className="h-12 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              {/* Data de disponibilidade e duração do contrato */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="contractDuration" className="text-base font-medium">
+                    Duração mínima do contrato (meses)
+                  </Label>
+                  <Input
+                    type="number"
+                    id="contractDuration"
+                    min="1"
+                    value={formData.duracao_minima_contrato}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      duracao_minima_contrato: e.target.value 
+                    })}
+                    placeholder="Ex: 12"
+                    className="h-12 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <Label htmlFor="availableFrom" className="text-base font-medium">
+                    Data de Disponibilidade
+                  </Label>
+                  <Input
+                    type="date"
+                    id="availableFrom"
+                    value={formData.availableFrom}
+                    onChange={(e) => {
+                      // Garante que o valor é uma data válida no formato yyyy-mm-dd
+                      if (e.target.validity.valid) {
+                        setFormData({ 
+                          ...formData, 
+                          availableFrom: e.target.value 
+                        });
+                      }
+                    }}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="h-12 rounded-xl w-full"
+                    pattern="\d{4}-\d{2}-\d{2}" // Padrão yyyy-mm-dd
                   />
                 </div>
               </div>
