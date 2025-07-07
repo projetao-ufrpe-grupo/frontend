@@ -1,13 +1,17 @@
 "use client"
 
+import { TagCardsSelector } from "@/components/listing/listing-tags-selector"
+import { StateSelect } from "@/components/states"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { anuncioService } from "@/lib/services/anuncio.service"
+import { Ad } from "@/lib/services/types"
 import {
   ArrowLeft,
   ArrowRight,
@@ -23,14 +27,12 @@ import {
   Info,
   MapPin,
   Plus,
-  Upload
+  Upload,
+  X
 } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { Property, Ad } from "@/lib/services/types"
-import api from "@/lib/axios"
-import { TagCardsSelector } from "@/components/listing/listing-tags-selector"
-import { mask } from "remask"
-import { StateSelect } from "@/components/states"
+import { toast } from "sonner"
 
 
 const steps = [
@@ -133,6 +135,7 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
     images: initialData?.images ?? [],
     availableFrom: initialData?.availableFrom ?? new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD
   });
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const [newFeature, setNewFeature] = useState("")
 
@@ -194,6 +197,13 @@ function formatAddress(
     }
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setSelectedFiles(Array.from(e.target.files));
+    }
+  };
 
   async function handleSubmit() {
     if (isSubmitting) return;
@@ -202,93 +212,82 @@ function formatAddress(
     try {
       // Validar campos obrigatórios
       if (!formData.tipo || !formData.logradouro || !formData.cidade || !formData.estado) {
-        alert("Por favor, preencha todos os campos obrigatórios (Tipo, Endereço, Cidade e Estado)");
+        toast.error("Por favor, preencha todos os campos obrigatórios (Tipo, Endereço, Cidade e Estado)");
         return;
       }
 
       // Verificar se o aluguel foi preenchido
       if (!formData.aluguel || parseFloat(formData.aluguel) <= 0) {
-        alert("O valor do aluguel é obrigatório e deve ser maior que zero");
+        toast.error("O valor do aluguel é obrigatório e deve ser maior que zero");
         return;
       }
 
-      // 1. Preparar dados do imóvel
-      const propertyPayload: Property = {
-        id: formData.id,
-        tipo: formData.tipo,
-        logradouro: formData.logradouro,
-        numero: formData.numero,
-        complemento: formData.complemento || undefined,
-        bairro: formData.bairro,
+      // Verificar se há fotos selecionadas
+      if (selectedFiles.length === 0) {
+        toast.error("Por favor, selecione pelo menos uma foto do imóvel");
+        return;
+      }
+
+      // Preparar o payload no formato esperado pela API
+      const requestPayload = {
+        aluguel: parseFloat(formData.aluguel),
+        condominio: formData.condominio ? parseFloat(formData.condominio) : 0,
+        caucao: formData.caucao ? parseFloat(formData.caucao) : 0,
+        duracaoMinimaContrato: parseInt(formData.duracao_minima_contrato),
+        area: parseFloat(formData.area),
+        descricao: formData.description,
+        tipo: mapTipoImovel(formData.tipo),
+        dataDisponibilidade: formData.availableFrom,
+        qtdQuartos: parseInt(formData.qtd_quartos),
+        qtdBanheiros: parseInt(formData.qtd_banheiros),
+        cep: formData.cep.replace(/\D/g, ''),
         cidade: formData.cidade,
         estado: formData.estado,
-        cep: formData.cep,
-        qtd_quartos: parseInt(formData.qtd_quartos) || 0,
-        qtd_banheiros: parseInt(formData.qtd_banheiros) || 0,
-        area: parseFloat(formData.area) || 0,
-        descricao: formData.description || undefined,
+        logradouro: formData.logradouro,
+        numero: formData.numero,
+        bairro: formData.bairro,
+        complemento: formData.complemento || "",
+        caracteristicas: mapCaracteristicas(formData.features)
       };
 
-      // 2. Criar/Atualizar imóvel
-      let propertyId = formData.id;
-      if (mode === "edit" && propertyId) {
-        await api.put(`/properties/${propertyId}`, propertyPayload);
+      if (mode === 'edit' && initialData?.id) {
+        await anuncioService.atualizar(initialData.id, requestPayload, selectedFiles);
+        toast.success('Anúncio atualizado com sucesso!');
       } else {
-        const res = await api.post("/properties", propertyPayload);
-        propertyId = res.data.id;
+        await anuncioService.criar(requestPayload, selectedFiles);
+        toast.success('Anúncio criado com sucesso!');
       }
 
-      // 3. Preparar dados do anúncio com tratamento de valores
-      const adPayload: Ad = {
-        id: formData.id,
-        title: formData.title || `Aluguel de ${formData.tipo} em ${formData.cidade}`,
-        aluguel: parseFloat(formData.aluguel),
-        condominio: formData.condominio ? parseFloat(formData.condominio) : undefined,
-        caucao: formData.caucao ? parseFloat(formData.caucao) : undefined,
-        universidade: formData.universidade,
-        duracao_minima_contrato: parseInt(formData.duracao_minima_contrato) || 6,
-        pausado: false,
-        images: formData.images,
-        description: formData.description || undefined,
-        features: formData.features.length > 0 ? formData.features : undefined,
-        availableFrom: formData.availableFrom,
-        imovel_id: propertyId,
-        anunciante_id: initialData?.anunciante?.id || "",
-        created_at: new Date().toISOString(),
-      };
-
-      // 4. Criar/Atualizar anúncio
-      if (mode === "edit" && initialData?.id) {
-        await api.put(`/ads/${initialData.id}`, adPayload);
-        alert("Anúncio atualizado com sucesso!");
-      } else {
-        await api.post("/ads", adPayload);
-        alert("Anúncio criado com sucesso!");
-      }
-
-      // Redirecionar após sucesso
-      // router.push('/dashboard') - implementar conforme sua roteamento
-
+      router.push('/meus-anuncios');
     } catch (error) {
-  let errorMessage = "Ocorreu um erro ao salvar o anúncio";
-  
-  // Verifica se é um erro do Axios
-  if (typeof error === 'object' && error !== null && 'response' in error) {
-    const axiosError = error as { response?: { data?: { message?: string } } };
-    if (axiosError.response?.data?.message) {
-      errorMessage += `: ${axiosError.response.data.message}`;
-    }
-  } 
-  // Verifica se é uma instância de Error padrão
-  else if (error instanceof Error) {
-    errorMessage += `: ${error.message}`;
-  }
-  
-    console.error("Erro completo:", error);
-    alert(errorMessage);
-  } finally {
+      console.error('Erro ao criar anúncio:', error);
+      toast.error('Erro ao criar anúncio. Por favor, tente novamente.');
+    } finally {
       setIsSubmitting(false);
     }
+  }
+
+  // Função auxiliar para mapear o tipo do imóvel
+  function mapTipoImovel(tipo: string): string {
+    const tipoMap: Record<string, string> = {
+      'apartment': 'APARTAMENTO',
+      'house': 'CASA',
+      'room': 'QUARTO',
+      'studio': 'KITNET'
+    };
+    return tipoMap[tipo] || tipo;
+  }
+
+  // Função auxiliar para mapear as características
+  function mapCaracteristicas(features: string[]): string[] {
+    const caracteristicasMap: Record<string, string> = {
+      'Mobiliado': 'MOBILIADO',
+      'Aceita Pets': 'ACEITA_PETS'
+    };
+
+    return features
+      .map(feature => caracteristicasMap[feature])
+      .filter(feature => feature !== undefined);
   }
 
   const renderStepContent = () => {
@@ -697,15 +696,52 @@ function formatAddress(
             </div>
             <div className="max-w-2xl mx-auto">
               <div className="border-2 border-dashed border-gray-300 rounded-3xl p-12 text-center hover:border-blue-400 transition-colors">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                  <Upload className="text-white" size={32} />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Arraste suas fotos aqui</h3>
-                <p className="text-muted-foreground mb-4">ou clique para selecionar arquivos</p>
-                <Button variant="outline" className="rounded-2xl">
-                  Selecionar fotos
-                </Button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label htmlFor="file-upload" className="cursor-pointer">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                    <Upload className="text-white" size={32} />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Arraste suas fotos aqui</h3>
+                  <p className="text-muted-foreground mb-4">ou clique para selecionar arquivos</p>
+                  <Button variant="outline" className="rounded-2xl" type="button">
+                    Selecionar fotos
+                  </Button>
+                </label>
               </div>
+
+              {selectedFiles.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-semibold mb-3">Fotos selecionadas ({selectedFiles.length}):</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Foto ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                          onClick={() => {
+                            setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+                          }}
+                        >
+                          <X size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -923,4 +959,3 @@ function formatAddress(
     </div>
   )
 }
-
