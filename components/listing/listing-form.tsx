@@ -212,12 +212,8 @@ function formatAddress(
     try {
 
       // Validar campos obrigatórios
-      if (!formData.tipo || !formData.logradouro || !formData.cidade || !formData.estado || !formData.cep
-        || !formData.qtd_quartos || !formData.qtd_banheiros || !formData.area || !formData.aluguel
-        || !formData.duracao_minima_contrato || !formData.description || !formData.features.length
-        || !formData.availableFrom
-      ) {
-        toast.error("Por favor, preencha todos os campos obrigatórios");
+      if (!formData.tipo || !formData.logradouro || !formData.cidade || !formData.estado) {
+        alert("Por favor, preencha todos os campos obrigatórios (Tipo, Endereço, Cidade e Estado)");
         return;
       }
 
@@ -251,15 +247,47 @@ function formatAddress(
         logradouro: formData.logradouro,
         numero: formData.numero,
         bairro: formData.bairro,
-        complemento: formData.complemento || "",
-        caracteristicas: formData.features
+        cidade: formData.cidade,
+        estado: formData.estado,
+        cep: formData.cep,
+        qtd_quartos: parseInt(formData.qtd_quartos) || 0,
+        qtd_banheiros: parseInt(formData.qtd_banheiros) || 0,
+        area: parseFloat(formData.area) || 0,
+        descricao: formData.description || undefined,
       };
 
-      
+      // 2. Criar/Atualizar imóvel
+      let propertyId = formData.id;
+      if (mode === "edit" && propertyId) {
+        await api.put(`/properties/${propertyId}`, propertyPayload);
+      } else {
+        const res = await api.post("/properties", propertyPayload);
+        propertyId = res.data.id;
+      }
 
-      if (mode === 'edit' && initialData?.id) {
-        await anuncioService.atualizar(initialData.id, requestPayload, selectedFiles);
-        toast.success('Anúncio atualizado com sucesso!');
+      // 3. Preparar dados do anúncio com tratamento de valores
+      const adPayload: Ad = {
+        id: formData.id,
+        title: formData.title || `Aluguel de ${formData.tipo} em ${formData.cidade}`,
+        aluguel: parseFloat(formData.aluguel),
+        condominio: formData.condominio ? parseFloat(formData.condominio) : undefined,
+        caucao: formData.caucao ? parseFloat(formData.caucao) : undefined,
+        universidade: formData.universidade,
+        duracao_minima_contrato: parseInt(formData.duracao_minima_contrato) || 6,
+        pausado: false,
+        images: formData.images,
+        description: formData.description || undefined,
+        features: formData.features.length > 0 ? formData.features : undefined,
+        availableFrom: formData.availableFrom,
+        imovel_id: propertyId,
+        anunciante_id: initialData?.anunciante?.id || "",
+        created_at: new Date().toISOString(),
+      };
+
+      // 4. Criar/Atualizar anúncio
+      if (mode === "edit" && initialData?.id) {
+        await api.put(`/ads/${initialData.id}`, adPayload);
+        alert("Anúncio atualizado com sucesso!");
       } else {
         await anuncioService.criar(requestPayload, selectedFiles);
         toast.success('Anúncio criado com sucesso!');
@@ -563,49 +591,6 @@ function formatAddress(
                 </div>
               </div>
 
-              {/* Data de disponibilidade e duração do contrato */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label htmlFor="contractDuration" className="text-base font-medium">
-                    Duração mínima do contrato (meses)
-                  </Label>
-                  <Input
-                    type="number"
-                    id="contractDuration"
-                    min="1"
-                    value={formData.duracao_minima_contrato}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      duracao_minima_contrato: e.target.value 
-                    })}
-                    placeholder="Ex: 12"
-                    className="h-12 rounded-xl"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="availableFrom" className="text-base font-medium">
-                    Data de Disponibilidade
-                  </Label>
-                  <Input
-                    type="date"
-                    id="availableFrom"
-                    value={formData.availableFrom}
-                    onChange={(e) => {
-                      // Garante que o valor é uma data válida no formato yyyy-mm-dd
-                      if (e.target.validity.valid) {
-                        setFormData({ 
-                          ...formData, 
-                          availableFrom: e.target.value 
-                        });
-                      }
-                    }}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="h-12 rounded-xl w-full"
-                    pattern="\d{4}-\d{2}-\d{2}" // Padrão yyyy-mm-dd
-                  />
-                </div>
-              </div>
-
               <div className="space-y-4">
                 <Label className="text-base font-medium">Características</Label>
                 <TagCardsSelector
@@ -765,49 +750,15 @@ function formatAddress(
             </div>
             <div className="max-w-2xl mx-auto">
               <div className="border-2 border-dashed border-gray-300 rounded-3xl p-12 text-center hover:border-blue-400 transition-colors">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                    <Upload className="text-white" size={32} />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">Arraste suas fotos aqui</h3>
-                  <p className="text-muted-foreground mb-4">ou clique para selecionar arquivos</p>
-                </label>
-              </div>
-
-              {selectedFiles.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="font-semibold mb-3">Fotos selecionadas ({selectedFiles.length}):</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {selectedFiles.map((file, index) => (
-                      <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={`Foto ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2 h-8 w-8 rounded-full"
-                          onClick={() => {
-                            setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
-                          }}
-                        >
-                          <X size={14} />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                  <Upload className="text-white" size={32} />
                 </div>
-              )}
+                <h3 className="text-xl font-semibold mb-2">Arraste suas fotos aqui</h3>
+                <p className="text-muted-foreground mb-4">ou clique para selecionar arquivos</p>
+                <Button variant="outline" className="rounded-2xl">
+                  Selecionar fotos
+                </Button>
+              </div>
             </div>
           </div>
         );
