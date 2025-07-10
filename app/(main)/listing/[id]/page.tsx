@@ -21,6 +21,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { use, useEffect, useState } from "react"
 import InterestedUsers from "./interested-users"
+import { ShareButton } from "./share-button"
 
 export default function ListingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -240,10 +241,7 @@ export default function ListingPage({ params }: { params: Promise<{ id: string }
                   <MessageSquare size={18} />
                   Enviar mensagem
                 </Button>
-                <Button variant="ghost" className="w-full h-12 rounded-2xl flex items-center gap-2 font-medium">
-                  <Share2 size={18} />
-                  Compartilhar
-                </Button>
+                <ShareButton />
               </div>
             </CardContent>
           </Card>
