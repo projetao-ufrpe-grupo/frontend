@@ -21,8 +21,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { use, useEffect, useState } from "react"
 import InterestedUsers from "./interested-users"
+import { getInterestedUsers } from "@/lib/services/ad.service"
 
-export default function ListingPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [anuncio, setAnuncio] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -267,7 +268,8 @@ export default function ListingPage({ params }: { params: Promise<{ id: string }
           {/* Lista de Usuários Interessados */}
           <Card>
             <CardContent className="pt-8 flex-1 flex flex-col">
-              <InterestedUsers />
+              {/* TODO: Chamar aqui a função que retorna os usuários interessados por um anúncio */}
+              <InterestedUsers interestedUsers={await getInterestedUsers(anuncio.id)} />
             </CardContent>
           </Card>
         </div>
