@@ -20,6 +20,11 @@ interface UserInfo {
   name: string;
   roles: string[];
   tipoUsuario: string;
+  fotoPerfil?: string;  // opcional
+  biografia?: string;  // opcional
+  semestre?: number;   // opcional
+  curso?: string;      // opcional
+  regiaoDeInteresse?: string; // opcional
   interesses: string[];
   privacidadePerfil: PrivacidadePerfil;
 }

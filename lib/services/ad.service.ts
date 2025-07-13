@@ -1,18 +1,18 @@
 import api from '../axios';
-import type { ApiResponse, Ad, User } from './types'; // ajuste o caminho conforme seu projeto
+import type { ApiResponse, Ad, UserInfo } from './types'; // ajuste o caminho conforme seu projeto
 
 export async function updateAdStatus(adId: string): Promise<ApiResponse<Ad>> {
   const response = await api.patch<ApiResponse<Ad>>(`/anuncios/${adId}/toggle-pause`);
   return response.data;
 }
 
-export async function getInterestedUsers(adId: string): Promise<ApiResponse<User[]>> {
-  const response = await api.get<ApiResponse<User[]>>(`/ads/${adId}/interested`);
-  return response.data; // retorna ApiResponse com data: User[]
+export async function getInterestedUsers(adId: string): Promise<UserInfo[]> {
+  const response = await api.get<ApiResponse<UserInfo[]>>(`/anuncios/${adId}/favoritos`);
+  return response.data.data; // retorna apenas o array de UserInfo
 }
 
 export async function getAdById(adId: string): Promise<ApiResponse<Ad>> {
-  const response = await api.get<ApiResponse<Ad>>(`/ads/${adId}`);
+  const response = await api.get<ApiResponse<Ad>>(`/anuncios/${adId}`);
   return response.data; // retorna ApiResponse com data: Ad
 }
 
