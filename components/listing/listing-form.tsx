@@ -261,10 +261,26 @@ function formatAddress(
 
       // 4. Criar/Atualizar anúncio
       if (mode === "edit" && initialData?.id) {
+        
         await anuncioService.atualizar(initialData.id, requestPayload, selectedFiles);
         alert("Anúncio atualizado com sucesso!");
       } else {
-        await anuncioService.criar(requestPayload, selectedFiles);
+        try {
+          await anuncioService.criar(requestPayload, selectedFiles);
+        } catch (error) {
+          if (typeof error === "object" && error !== null && "response" in error) {
+            const err = error as { response?: { status?: any; data?: any; headers?: any } };
+            console.error("Full error details:", {
+              status: err.response?.status,
+              data: err.response?.data,
+              headers: err.response?.headers
+            });
+          } else {
+            console.error("Full error details:", error);
+          }
+          toast.error('Erro ao criar anúncio. Por favor, tente novamente.');
+          return;
+        }
         toast.success('Anúncio criado com sucesso!');
       }
 
