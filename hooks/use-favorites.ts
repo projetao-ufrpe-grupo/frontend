@@ -1,5 +1,6 @@
 "use client"
 
+import { anuncioService } from "@/lib/services/anuncio.service"
 import { useState, useEffect } from "react"
 
 export function useFavorites() {
@@ -23,13 +24,20 @@ export function useFavorites() {
   }, [favorites, isLoaded])
 
   const toggleFavorite = (id: string) => {
-    setFavorites((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter((item) => item !== id)
-      } else {
-        return [...prev, id]
-      }
+    anuncioService.favoritar(id)
+    .then((response) => {
+      setFavorites((prev) => {
+        if (prev.includes(id)) {
+          return prev.filter((item) => item !== id)
+        } else {
+          return [...prev, id]
+        }
+      })
     })
+    .catch((error) => {
+      console.error(error, 'error')
+    })
+
   }
 
   const isFavorite = (id: string) => {
