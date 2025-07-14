@@ -237,27 +237,27 @@ function formatAddress(
 
       // Preparar o payload no formato esperado pela API
       const requestPayload = {
-        aluguel: parseFloat(formData.aluguel),
-        condominio: formData.condominio ? parseFloat(formData.condominio) : 0,
-        caucao: formData.caucao ? parseFloat(formData.caucao) : 0,
-        duracaoMinimaContrato: parseInt(formData.duracao_minima_contrato),
-        area: parseFloat(formData.area),
-        descricao: formData.description,
-        tipo: mapTipoImovel(formData.tipo),
-        dataDisponibilidade: formData.availableFrom,
-        qtdQuartos: parseInt(formData.qtd_quartos),
-        qtdBanheiros: parseInt(formData.qtd_banheiros),
-        cep: formData.cep.replace(/\D/g, ''),
-        cidade: formData.cidade,
-        estado: formData.estado,
-        logradouro: formData.logradouro,
-        numero: formData.numero,
-        bairro: formData.bairro,
-        qtd_quartos: parseInt(formData.qtd_quartos) || 0,
-        qtd_banheiros: parseInt(formData.qtd_banheiros) || 0,
-        complemento: formData.complemento,
-        caracteristicas: mapCaracteristicas(formData.features),
-      };
+      aluguel: parseFloat(formData.aluguel) || 0,
+      condominio: formData.condominio ? parseFloat(formData.condominio) : 0,
+      caucao: formData.caucao ? parseFloat(formData.caucao) : 0,
+      duracaoMinimaContrato: parseInt(formData.duracao_minima_contrato) || 0,
+      area: parseFloat(formData.area) || 0,
+      descricao: formData.description,
+      tipo: mapTipoImovel(formData.tipo),
+      dataDisponibilidade: formData.availableFrom,
+      qtdQuartos: parseInt(formData.qtd_quartos) || 0,  // Use consistent naming
+      qtdBanheiros: parseInt(formData.qtd_banheiros) || 0, // Remove duplicates
+      cep: formData.cep.replace(/\D/g, ''),
+      cidade: formData.cidade,
+      estado: formData.estado,
+      logradouro: formData.logradouro,
+      numero: formData.numero,
+      bairro: formData.bairro,
+      complemento: formData.complemento,
+      caracteristicas: formData.features,
+    };
+
+    console.log("Cleaned Payload:", requestPayload); // Verify before sending
 
       // 4. Criar/Atualizar anúncio
       if (mode === "edit" && initialData?.id) {
@@ -266,6 +266,7 @@ function formatAddress(
         alert("Anúncio atualizado com sucesso!");
       } else {
         try {
+          console.log("Submitting payload:", requestPayload);
           await anuncioService.criar(requestPayload, selectedFiles);
         } catch (error) {
           if (typeof error === "object" && error !== null && "response" in error) {

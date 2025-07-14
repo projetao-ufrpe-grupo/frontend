@@ -48,6 +48,11 @@ class AnuncioService {
     return { data: response.data, status: response.status };
   }
 
+  async listarPorUsuario(usuarioId: string): Promise<ApiResponse<Anuncio[]>> {
+    const response = await api.get<Anuncio[]>(`/anuncios/anunciante/${usuarioId}`);
+    return { data: response.data, status: response.status };
+  }
+
   async buscarPorId(id: string): Promise<ApiResponse<Anuncio>> {
     const response = await api.get<Anuncio>(`/anuncios/${id}`);
     return { data: response.data, status: response.status };
@@ -71,18 +76,27 @@ class AnuncioService {
     return { data: response.data, status: response.status };
   }
 
-  async adicionarFoto(anuncioId: string, foto: File): Promise<ApiResponse<Anuncio>> {
-    const formData = new FormData();
-    formData.append('foto', foto); // 'foto' deve corresponder ao nome que o backend espera
+  async adicionarFoto(anuncioId: string, foto: File): Promise<ApiResponse<void>> {
+      const formData = new FormData();
+      formData.append('fotos', foto); // Must match exactly what backend expects
 
-    const response = await api.post<Anuncio>(`/anuncios/${anuncioId}/fotos`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-
-    return { data: response.data, status: response.status };
-  }
+      try {
+        const response = await api.post(`/anuncios/${anuncioId}/fotos`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return { data: response.data, status: response.status };
+      } catch (error) {
+        const err = error as any;
+        console.error('Error adding photo:', {
+          anuncioId,
+          fileName: foto.name,
+          error: err?.response?.data || err?.message
+        });
+        throw error;
+      }
+    }
 
   async excluirFoto(anuncioId: string, fotoId: string): Promise<ApiResponse<void>> {
     const response = await api.delete(`/anuncios/${anuncioId}/fotos/${fotoId}`);
