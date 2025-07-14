@@ -1,5 +1,5 @@
 import api from '../axios';
-import { Anuncio, ApiResponse } from './types';
+import { Anuncio, ApiResponse} from './types';
 
 interface CriarAnuncioPayload {
   aluguel: number;
@@ -53,26 +53,40 @@ class AnuncioService {
     return { data: response.data, status: response.status };
   }
 
-  async atualizar(id: string, payload: Partial<CriarAnuncioPayload>, fotos?: File[]): Promise<ApiResponse<Anuncio>> {
-    const formData = new FormData();
-    const requestBlob = new Blob([JSON.stringify(payload)], {
-      type: 'application/json'
-    });
-    formData.append('request', requestBlob);
-    
-    if (fotos) {
-      fotos.forEach((foto) => {
-        formData.append('fotos', foto);
-      });
+  async atualizar(
+    id: string,
+    payload: Partial<CriarAnuncioPayload>,
+    fotos?: File[]
+  ): Promise<ApiResponse<Anuncio>> {
+    // Primeiro atualiza os dados principais do anúncio
+    const response = await api.put<Anuncio>(`/anuncios/${id}`, payload);
+
+    // Se houver fotos novas, adiciona uma a uma
+    if (fotos && fotos.length > 0) {
+      for (const foto of fotos) {
+        await this.adicionarFoto(id, foto);
+      }
     }
 
-    const response = await api.put<Anuncio>(`/anuncios/${id}`, formData, {
+    return { data: response.data, status: response.status };
+  }
+
+  async adicionarFoto(anuncioId: string, foto: File): Promise<ApiResponse<Anuncio>> {
+    const formData = new FormData();
+    formData.append('foto', foto); // 'foto' deve corresponder ao nome que o backend espera
+
+    const response = await api.post<Anuncio>(`/anuncios/${anuncioId}/fotos`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
 
     return { data: response.data, status: response.status };
+  }
+
+  async excluirFoto(anuncioId: string, fotoId: string): Promise<ApiResponse<void>> {
+    const response = await api.delete(`/anuncios/${anuncioId}/fotos/${fotoId}`);
+    return { data: undefined, status: response.status };
   }
 
   async excluir(id: string): Promise<ApiResponse<void>> {

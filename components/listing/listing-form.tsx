@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import api from "@/lib/axios"
 import { anuncioService } from "@/lib/services/anuncio.service"
-import { Ad } from "@/lib/services/types"
+import { Ad, Foto } from "@/lib/services/types"
 import {
   ArrowLeft,
   ArrowRight,
@@ -98,7 +99,7 @@ interface FormData {
   duracao_minima_contrato: string;
   description: string;
   features: string[];
-  images: string[];
+  images: Foto[];
   availableFrom: string;
 }
 
@@ -109,8 +110,10 @@ type ListingFormProps = {
 
 export default function ListingForm({ mode = 'create', initialData }: ListingFormProps) {
   const [currentStep, setCurrentStep] = useState(1)
+  console.log("Initial Data:", initialData)
   const [formData, setFormData] = useState<FormData>({
-    // Unificar nomes usando sempre snake_case
+  
+    // Dados do Imóvel
     id: initialData?.id ?? "",
     tipo: initialData?.imovel?.tipo ?? "",
     logradouro: initialData?.imovel?.logradouro ?? "",
@@ -120,20 +123,23 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
     cidade: initialData?.imovel?.cidade ?? "",
     estado: initialData?.imovel?.estado ?? "",
     cep: initialData?.imovel?.cep ?? "",
-    qtd_quartos: initialData?.imovel?.qtd_quartos?.toString() ?? "",
-    qtd_banheiros: initialData?.imovel?.qtd_banheiros?.toString() ?? "",
+    qtd_quartos: initialData?.imovel?.qtd_quartos?.toString() ?? "0",
+    qtd_banheiros: initialData?.imovel?.qtd_banheiros?.toString() ?? "1",
     area: initialData?.imovel?.area?.toString() ?? "",
 
+    // Dados do Anúncio
     title: initialData?.title ?? "",
     aluguel: initialData?.aluguel?.toString() ?? "",
-    condominio: initialData?.condominio?.toString() ?? "",
-    caucao: initialData?.caucao?.toString() ?? "",
+    condominio: initialData?.condominio?.toString() ?? "0",
+    caucao: initialData?.caucao?.toString() ?? "0",
     universidade: initialData?.universidade ?? "USP",
     duracao_minima_contrato: initialData?.duracao_minima_contrato?.toString() ?? "6",
     description: initialData?.description ?? initialData?.imovel?.descricao ?? "",
-    features: initialData?.features ?? [],
-    images: initialData?.images ?? [],
-    availableFrom: initialData?.availableFrom ?? new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD
+    features: initialData?.features ? [...initialData.features] : [],
+    images: initialData?.images ? [...initialData.images] : [],
+    availableFrom: initialData?.availableFrom 
+      ? new Date(initialData.availableFrom).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
@@ -247,46 +253,15 @@ function formatAddress(
         logradouro: formData.logradouro,
         numero: formData.numero,
         bairro: formData.bairro,
-        cidade: formData.cidade,
-        estado: formData.estado,
-        cep: formData.cep,
         qtd_quartos: parseInt(formData.qtd_quartos) || 0,
         qtd_banheiros: parseInt(formData.qtd_banheiros) || 0,
-        area: parseFloat(formData.area) || 0,
-        descricao: formData.description || undefined,
-      };
-
-      // 2. Criar/Atualizar imóvel
-      let propertyId = formData.id;
-      if (mode === "edit" && propertyId) {
-        await api.put(`/properties/${propertyId}`, propertyPayload);
-      } else {
-        const res = await api.post("/properties", propertyPayload);
-        propertyId = res.data.id;
-      }
-
-      // 3. Preparar dados do anúncio com tratamento de valores
-      const adPayload: Ad = {
-        id: formData.id,
-        title: formData.title || `Aluguel de ${formData.tipo} em ${formData.cidade}`,
-        aluguel: parseFloat(formData.aluguel),
-        condominio: formData.condominio ? parseFloat(formData.condominio) : undefined,
-        caucao: formData.caucao ? parseFloat(formData.caucao) : undefined,
-        universidade: formData.universidade,
-        duracao_minima_contrato: parseInt(formData.duracao_minima_contrato) || 6,
-        pausado: false,
-        images: formData.images,
-        description: formData.description || undefined,
-        features: formData.features.length > 0 ? formData.features : undefined,
-        availableFrom: formData.availableFrom,
-        imovel_id: propertyId,
-        anunciante_id: initialData?.anunciante?.id || "",
-        created_at: new Date().toISOString(),
+        complemento: formData.complemento,
+        caracteristicas: mapCaracteristicas(formData.features),
       };
 
       // 4. Criar/Atualizar anúncio
       if (mode === "edit" && initialData?.id) {
-        await api.put(`/ads/${initialData.id}`, adPayload);
+        await anuncioService.atualizar(initialData.id, requestPayload, selectedFiles);
         alert("Anúncio atualizado com sucesso!");
       } else {
         await anuncioService.criar(requestPayload, selectedFiles);
@@ -750,15 +725,90 @@ function formatAddress(
             </div>
             <div className="max-w-2xl mx-auto">
               <div className="border-2 border-dashed border-gray-300 rounded-3xl p-12 text-center hover:border-blue-400 transition-colors">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                  <Upload className="text-white" size={32} />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Arraste suas fotos aqui</h3>
-                <p className="text-muted-foreground mb-4">ou clique para selecionar arquivos</p>
-                <Button variant="outline" className="rounded-2xl">
-                  Selecionar fotos
-                </Button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label htmlFor="file-upload" className="cursor-pointer">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                    <Upload className="text-white" size={32} />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Arraste suas fotos aqui</h3>
+                  <p className="text-muted-foreground mb-4">ou clique para selecionar arquivos</p>
+                </label>
               </div>
+
+              {selectedFiles.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-semibold mb-3">Fotos selecionadas ({selectedFiles.length}):</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Foto ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                          onClick={() => {
+                            setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+                          }}
+                        >
+                          <X size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {formData.images.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-semibold mb-3">Fotos do imóvel:</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {formData.images.map((image, index) => (
+                      <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                        <img
+                          src={`data:image/jpeg;base64,${image.dadosBase64}`}
+                          alt={`Foto ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                          onClick={async () => {
+                            // Remove a imagem localmente do estado
+                            setFormData((prev) => ({
+                              ...prev,
+                              images: prev.images.filter((_, i) => i !== index),
+                            }));
+                            
+                            // Chama a API para excluir a foto do servidor
+                            try {
+                              const fotoId = formData.images[index].id; // Supondo que cada imagem tenha um id
+                              await anuncioService.excluirFoto(formData.id, fotoId); // Supondo que formData.id seja o anuncioId
+                            } catch (error) {
+                              console.error("Erro ao excluir foto:", error);
+                              // Você pode querer reverter a remoção local se a chamada API falhar
+                              // ou mostrar uma mensagem de erro para o usuário
+                            }
+                          }}
+                        >
+                          <X size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
