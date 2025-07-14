@@ -15,46 +15,97 @@ import {
   MapPin,
   MessageSquare,
   Ruler,
-  Share2
+  Share2,
+  Loader2
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { use, useEffect, useState } from "react"
+import { useEffect, useState, use } from "react"
 import InterestedUsers from "./interested-users"
 import { getInterestedUsers } from "@/lib/services/ad.service"
+import { UserInfo } from "@/lib/services/types"
 
-export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
+interface Anuncio {
+  id: string;
+  descricao: string;
+  enderecoCompleto: string;
+  qtdQuartos: number;
+  qtdBanheiros: number;
+  area: number;
+  dataDisponibilidade: string;
+  fotos?: { id: string; dadosBase64: string }[];
+  caracteristicas: string[];
+  duracaoMinimaContrato: number;
+  caucao: number;
+  aluguel: number;
+  condominio: number;
+  anunciante: {
+    id: string;
+    name: string;
+  };
+}
+
+export default function ListingPage({ params }: { params: Promise<{ id: string }> }) {
+  // Unwrap the params promise using use()
   const { id } = use(params)
-  const [anuncio, setAnuncio] = useState<any>(null)
+  const [interestedUsers, setInterestedUsers] = useState<UserInfo[]>([])
+  const [anuncio, setAnuncio] = useState<Anuncio | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchAnuncio = async () => {
+    if (!id) return
+
+    const fetchData = async () => {
       try {
-        const response = await anuncioService.buscarPorId(id)
-        setAnuncio(response.data)
-      } catch (error) {
-        console.error("Erro ao buscar anúncio:", error)
+        const [anuncioData, users] = await Promise.all([
+          anuncioService.buscarPorId(id),
+          getInterestedUsers(id)
+        ])
+        
+        if (!anuncioData.data) {
+          throw new Error("Anúncio não encontrado")
+        }
+
+        setAnuncio(anuncioData.data)
+        setInterestedUsers(users || [])
+      } catch (err) {
+        console.error("Error:", err)
+        setError(err instanceof Error ? err.message : "Ocorreu um erro")
       } finally {
         setLoading(false)
       }
     }
 
-    if (id) fetchAnuncio()
+    fetchData()
   }, [id])
 
   if (loading) {
     return (
-      <div className="container py-10">
-        <p>Carregando...</p>
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container py-10 text-center">
+        <h2 className="text-2xl font-bold text-red-500">{error}</h2>
+        <Link href="/" className="text-blue-500 hover:underline mt-4 inline-block">
+          Voltar para a página inicial
+        </Link>
       </div>
     )
   }
 
   if (!anuncio) {
     return (
-      <div className="container py-10">
-        <p>Anúncio não encontrado</p>
+      <div className="container py-10 text-center">
+        <h2 className="text-2xl font-bold">Anúncio não encontrado</h2>
+        <Link href="/" className="text-blue-500 hover:underline mt-4 inline-block">
+          Voltar para a página inicial
+        </Link>
       </div>
     )
   }
@@ -95,12 +146,12 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           <div className="mb-10">
             <Carousel className="w-full">
               <CarouselContent>
-                {anuncio.fotosBase64.map((foto: string, index: number) => (
-                  <CarouselItem key={index}>
+                {anuncio.fotos?.map((foto: { id: string; dadosBase64: string }, index: number) => (
+                  <CarouselItem key={foto.id}> {/* Melhor usar foto.id como key */}
                     <div className="aspect-video relative rounded-3xl overflow-hidden">
                       <Image
-                        src={`data:image/jpeg;base64,${foto}`}
-                        alt={`${anuncio.descricao} - imagem ${index + 1}`}
+                        src={`data:image/jpeg;base64,${foto.dadosBase64}`} // Adiciona prefixo Base64
+                        alt={`Foto do anúncio`}
                         fill
                         className="object-cover"
                       />
@@ -108,8 +159,6 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-4" />
-              <CarouselNext className="right-4" />
             </Carousel>
           </div>
 
@@ -268,8 +317,13 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           {/* Lista de Usuários Interessados */}
           <Card>
             <CardContent className="pt-8 flex-1 flex flex-col">
-              {/* TODO: Chamar aqui a função que retorna os usuários interessados por um anúncio */}
-              <InterestedUsers interestedUsers={await getInterestedUsers(anuncio.id)} />
+              {interestedUsers.length > 0 ? (
+                <InterestedUsers interestedUsers={interestedUsers} />
+              ) : (
+                <p className="text-muted-foreground text-center py-4">
+                  Nenhum usuário interessado ainda
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -1,5 +1,6 @@
 "use client"
 
+import SafeImage from "@/components/listing/safe-image"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
@@ -23,7 +24,10 @@ interface PropertyCardProps {
     area: number
     enderecoCompleto: string
     caracteristicas: string[]
-    fotosBase64: string[]
+    fotos: {        // ← Formato atualizado
+      id: string
+      dadosBase64: string
+    }[]
     anunciante: {
       id: string
       name: string
@@ -42,7 +46,11 @@ export default function PropertyCard({ property, viewMode }: PropertyCardProps) 
         <div className="flex flex-col lg:flex-row">
           <div className="relative w-full lg:w-80 h-64 lg:h-auto">
             <Link href={`/listing/${property.id}`}>
-              <Image src={`data:image/jpeg;base64,${property.fotosBase64[0]}`} alt={property.descricao} fill className="object-cover" />
+              <SafeImage
+                fotos={property.fotos}
+                alt={`${property.tipo} em ${property.enderecoCompleto}`}
+                className="object-cover"
+              />
             </Link>
             <Button
               variant="ghost"
@@ -120,11 +128,11 @@ export default function PropertyCard({ property, viewMode }: PropertyCardProps) 
       <Link href={`/listing/${property.id}`}>
         <div className="relative">
           <div className="aspect-[4/3] relative">
-            <Image
-              src={`data:image/jpeg;base64,${property.fotosBase64[0]}`}
+            <SafeImage
+              fotos={property.fotos}
               alt={property.descricao}
-              fill
               className="object-cover"
+              priority={true} // Para a primeira imagem da lista
             />
           </div>
           <Button
