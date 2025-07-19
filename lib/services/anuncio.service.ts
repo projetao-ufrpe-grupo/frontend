@@ -107,6 +107,16 @@ class AnuncioService {
     const response = await api.delete(`/anuncios/${id}`);
     return { data: undefined, status: response.status };
   }
+
+  async favoritar(id: string): Promise<ApiResponse<void>> {
+    const response = await api.post(`/account/favoritar/${id}`);
+    return response.data;
+  }
+
+  async favoritos(): Promise<ApiResponse<Anuncio[]>> {
+    const response = await api.get(`/account/favoritos`);
+    return { data: response.data, status: response.status };
+  }
 }
 
 export const anuncioService = new AnuncioService(); 

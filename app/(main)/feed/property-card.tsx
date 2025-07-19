@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import SafeImage from "@/components/listing/safe-image"
 import { Badge } from "@/components/ui/badge"
@@ -7,7 +7,6 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { useFavorites } from "@/hooks/use-favorites"
 import { formatCurrency } from "@/lib/utils"
 import { Heart, MapPin } from "lucide-react"
-import Image from "next/image"
 import Link from "next/link"
 
 interface PropertyCardProps {
@@ -24,21 +23,24 @@ interface PropertyCardProps {
     area: number
     enderecoCompleto: string
     caracteristicas: string[]
-    fotos: {        // ← Formato atualizado
+    fotos: {
       id: string
       dadosBase64: string
     }[]
     anunciante: {
-      id: string
-      name: string
-    }
-  }
-  viewMode: "grid" | "list"
+      id: string;
+      name: string;
+    };
+  };
+  viewMode: "grid" | "list";
 }
 
-export default function PropertyCard({ property, viewMode }: PropertyCardProps) {
-  const { isFavorite, toggleFavorite } = useFavorites()
-  const favorited = isFavorite(property.id)
+export default function PropertyCard({
+  property,
+  viewMode,
+}: PropertyCardProps) {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorited = isFavorite(property.id);
 
   if (viewMode === "list") {
     return (
@@ -57,12 +59,21 @@ export default function PropertyCard({ property, viewMode }: PropertyCardProps) 
               size="icon"
               className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg"
               onClick={() => toggleFavorite(property.id)}
-              aria-label={favorited ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+              aria-label={
+                favorited ? "Remover dos favoritos" : "Adicionar aos favoritos"
+              }
             >
-              <Heart className={favorited ? "fill-red-500 text-red-500" : "text-gray-600"} size={20} />
+              <Heart
+                className={
+                  favorited ? "fill-red-500 text-red-500" : "text-gray-600"
+                }
+                size={20}
+              />
             </Button>
             <Badge className="absolute bottom-4 left-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white border-0 rounded-full px-4 py-2 font-semibold">
               {formatCurrency(property.aluguel)}
+              {property.condominio > 0 &&
+                ` + ${formatCurrency(property.condominio)}`}
             </Badge>
           </div>
 
@@ -80,10 +91,12 @@ export default function PropertyCard({ property, viewMode }: PropertyCardProps) 
 
             <div className="flex items-center text-gray-600 dark:text-gray-400 mb-4">
               <Badge variant="secondary" className="rounded-full">
-                {property.qtdQuartos} {property.qtdQuartos === 1 ? "Quarto" : "Quartos"}
+                {property.qtdQuartos || 0}{" "}
+                {(property.qtdQuartos || 0) === 1 ? "Quarto" : "Quartos"}
               </Badge>
               <Badge variant="secondary" className="rounded-full">
-                {property.qtdBanheiros} {property.qtdBanheiros === 1 ? "Banheiro" : "Banheiros"}
+                {property.qtdBanheiros || 0}{" "}
+                {(property.qtdBanheiros || 0) === 1 ? "Banheiro" : "Banheiros"}
               </Badge>
               <Badge variant="secondary" className="rounded-full">
                 {property.area}m²
@@ -93,19 +106,26 @@ export default function PropertyCard({ property, viewMode }: PropertyCardProps) 
               </Badge>
             </div>
 
-            <p className="text-gray-600 dark:text-gray-400 mb-6 line-clamp-2 leading-relaxed">{property.descricao}</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-6 line-clamp-2 leading-relaxed">
+              {property.descricao}
+            </p>
 
-            <div className="flex flex-wrap gap-2 mb-6">
-              {property.caracteristicas.slice(0, 3).map((feature, index) => (
-                <Badge
-                  key={index}
-                  variant="secondary"
-                  className="rounded-full px-3 py-1 text-xs bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                >
-                  {feature}
-                </Badge>
-              ))}
-            </div>
+            {property.caracteristicas &&
+              property.caracteristicas.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {property.caracteristicas
+                    .slice(0, 3)
+                    .map((feature, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="rounded-full px-3 py-1 text-xs bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                      >
+                        {feature}
+                      </Badge>
+                    ))}
+                </div>
+              )}
 
             <div className="mt-auto">
               <Link href={`/listing/${property.id}`} className="w-full">
@@ -120,7 +140,7 @@ export default function PropertyCard({ property, viewMode }: PropertyCardProps) 
           </div>
         </div>
       </Card>
-    )
+    );
   }
 
   return (
@@ -140,12 +160,19 @@ export default function PropertyCard({ property, viewMode }: PropertyCardProps) 
             size="icon"
             className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg"
             onClick={(e) => {
-              e.preventDefault()
-              toggleFavorite(property.id)
+              e.preventDefault();
+              toggleFavorite(property.id);
             }}
-            aria-label={favorited ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+            aria-label={
+              favorited ? "Remover dos favoritos" : "Adicionar aos favoritos"
+            }
           >
-            <Heart className={favorited ? "fill-red-500 text-red-500" : "text-gray-600"} size={20} />
+            <Heart
+              className={
+                favorited ? "fill-red-500 text-red-500" : "text-gray-600"
+              }
+              size={20}
+            />
           </Button>
           <Badge className="absolute bottom-4 left-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white border-0 rounded-full px-4 py-2 font-semibold">
             {formatCurrency(property.aluguel)}
@@ -157,17 +184,23 @@ export default function PropertyCard({ property, viewMode }: PropertyCardProps) 
         <div className="flex justify-between items-start gap-4">
           <div>
             <Link href={`/listing/${property.id}`}>
-              <h3 className="text-lg font-semibold hover:text-blue-600 transition-colors">{property.descricao}</h3>
+              <h3 className="text-lg font-semibold hover:text-blue-600 transition-colors">
+                {property.descricao}
+              </h3>
             </Link>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{property.enderecoCompleto}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {property.enderecoCompleto}
+            </p>
           </div>
           <div className="text-right">
             <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
               {formatCurrency(property.aluguel)}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              + {formatCurrency(property.condominio)} (Condomínio)
-            </p>
+            {property.condominio > 0 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                + {formatCurrency(property.condominio)} (Condomínio)
+              </p>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -175,10 +208,12 @@ export default function PropertyCard({ property, viewMode }: PropertyCardProps) 
       <CardContent>
         <div className="flex flex-wrap gap-2 mb-4">
           <Badge variant="secondary" className="rounded-full">
-            {property.qtdQuartos} {property.qtdQuartos === 1 ? "Quarto" : "Quartos"}
+            {property.qtdQuartos}{" "}
+            {property.qtdQuartos === 1 ? "Quarto" : "Quartos"}
           </Badge>
           <Badge variant="secondary" className="rounded-full">
-            {property.qtdBanheiros} {property.qtdBanheiros === 1 ? "Banheiro" : "Banheiros"}
+            {property.qtdBanheiros}{" "}
+            {property.qtdBanheiros === 1 ? "Banheiro" : "Banheiros"}
           </Badge>
           <Badge variant="secondary" className="rounded-full">
             {property.area}m²
@@ -188,7 +223,7 @@ export default function PropertyCard({ property, viewMode }: PropertyCardProps) 
           </Badge>
         </div>
 
-        {property.caracteristicas.length > 0 && (
+        {property.caracteristicas && property.caracteristicas.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {property.caracteristicas.map((feature, index) => (
               <Badge key={index} variant="outline" className="rounded-full">
@@ -201,12 +236,12 @@ export default function PropertyCard({ property, viewMode }: PropertyCardProps) 
 
       <CardFooter className="flex justify-between items-center">
         <div className="text-sm text-gray-500 dark:text-gray-400">
-          Anunciante: {property.anunciante.name}
+          Anunciante: {property.anunciante?.name || "Não informado"}
         </div>
         <div className="text-sm text-gray-500 dark:text-gray-400">
           Contrato mínimo: {property.duracaoMinimaContrato} meses
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }
