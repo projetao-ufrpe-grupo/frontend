@@ -72,22 +72,33 @@ export interface Property {
 export interface Ad {
   id: string;
   title: string;
-  aluguel?: number;
-  caucao?: number;
-  condominio?: number;
+  description: string;
+  aluguel: number;
+  condominio: number;
+  caucao: number;
   universidade: string;
   duracao_minima_contrato: number;
   pausado: boolean;
+  anunciante_id: string;
+  imovel_id: string;
+  features: string[];
+  images: Foto[];
+  availableFrom: string;
+  imovel: {
+    tipo: string;
+    logradouro: string;
+    numero: string;
+    complemento: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
+    cep: string;
+    qtd_quartos: number;
+    qtd_banheiros: number;
+    area: number;
+    descricao: string;
+  };
   created_at: string;
-  availableFrom: string; // Data de disponibilidade do imóvel
-  images: string[]; // URLs das imagens do anúncio
-  description?: string; // Descrição do anúncio, opcional
-  features?: string[]; // Lista de recursos adicionais do imóvel
-  imovel_id: string; // ID do imóvel relacionado
-  anunciante_id: string; // ID do anunciante (LOCADOR)
-  // Expansões para facilitar no front:
-  imovel?: Property;
-  anunciante?: User; // usar User aqui
 }
 
 export interface UpdateUserProfilePayload {
@@ -117,9 +128,15 @@ export interface Anuncio {
   dataDisponibilidade: string;
   enderecoCompleto: string;
   caracteristicas: string[];
-  fotosBase64: string[];
+  fotosBase64: Foto[];
   anunciante: {
     id: string;
     name: string;
   };
+}
+
+export interface Foto {
+  id: string;
+  dadosBase64: string;
+  arquivo?: File; // opcional, usado para upload
 }

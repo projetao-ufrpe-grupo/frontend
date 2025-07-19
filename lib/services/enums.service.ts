@@ -5,7 +5,7 @@ export interface UserInterestResponse {
     description: string;
 }
 
-export class EnumsService {
+class EnumsService {
     async getUserInterests(): Promise<UserInterestResponse[]> {
         const response = await api.get<UserInterestResponse[]>('/enums/interesses-usuario');
         return response.data;

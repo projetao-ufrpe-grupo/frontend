@@ -1,34 +1,32 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import { useFavorites } from "@/hooks/use-favorites";
-import { formatCurrency } from "@/lib/utils";
-import { Heart, MapPin } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import SafeImage from "@/components/listing/safe-image"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { useFavorites } from "@/hooks/use-favorites"
+import { formatCurrency } from "@/lib/utils"
+import { Heart, MapPin } from "lucide-react"
+import Link from "next/link"
 
 interface PropertyCardProps {
   property: {
-    id: string;
-    aluguel: number;
-    condominio: number;
-    caucao: number;
-    duracaoMinimaContrato: number;
-    descricao: string;
-    tipo: string;
-    qtdQuartos: number;
-    qtdBanheiros: number;
-    area: number;
-    enderecoCompleto: string;
-    caracteristicas: string[];
-    fotosBase64: string[];
+    id: string
+    aluguel: number
+    condominio: number
+    caucao: number
+    duracaoMinimaContrato: number
+    descricao: string
+    tipo: string
+    qtdQuartos: number
+    qtdBanheiros: number
+    area: number
+    enderecoCompleto: string
+    caracteristicas: string[]
+    fotos: {
+      id: string
+      dadosBase64: string
+    }[]
     anunciante: {
       id: string;
       name: string;
@@ -50,18 +48,11 @@ export default function PropertyCard({
         <div className="flex flex-col lg:flex-row">
           <div className="relative w-full lg:w-80 h-64 lg:h-auto">
             <Link href={`/listing/${property.id}`}>
-              {property.fotosBase64 && property.fotosBase64.length > 0 ? (
-                <Image
-                  src={`data:image/jpeg;base64,${property.fotosBase64[0]}`}
-                  alt={property.descricao}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-500">Sem imagem</span>
-                </div>
-              )}
+              <SafeImage
+                fotos={property.fotos}
+                alt={`${property.tipo} em ${property.enderecoCompleto}`}
+                className="object-cover"
+              />
             </Link>
             <Button
               variant="ghost"
@@ -157,18 +148,12 @@ export default function PropertyCard({
       <Link href={`/listing/${property.id}`}>
         <div className="relative">
           <div className="aspect-[4/3] relative">
-            {property.fotosBase64 && property.fotosBase64.length > 0 ? (
-              <Image
-                src={`data:image/jpeg;base64,${property.fotosBase64[0]}`}
-                alt={property.descricao}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500">Sem imagem</span>
-              </div>
-            )}
+            <SafeImage
+              fotos={property.fotos}
+              alt={property.descricao}
+              className="object-cover"
+              priority={true} // Para a primeira imagem da lista
+            />
           </div>
           <Button
             variant="ghost"
