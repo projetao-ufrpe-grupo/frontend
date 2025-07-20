@@ -70,12 +70,14 @@ export default function ListingPage({
       try {
         const [anuncioData, users] = await Promise.all([
           anuncioService.buscarPorId(id),
-          getInterestedUsers(id),
+          getInterestedUsers(id)
         ]);
 
         if (!anuncioData.data) {
           throw new Error("Anúncio não encontrado");
         }
+
+        console.log(users, 'users')
 
         setAnuncio(anuncioData.data);
         setInterestedUsers(users || []);
@@ -90,8 +92,6 @@ export default function ListingPage({
     const fetchComentarios = async () => {
       const comentarios = await anuncioService.listarComentarios(id);
       setComentarios(comentarios.data);
-
-      console.log("Comentários:", comentarios.data);
     };
 
     fetchData();
