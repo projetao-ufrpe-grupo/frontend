@@ -7,8 +7,8 @@ export async function updateAdStatus(adId: string): Promise<ApiResponse<Ad>> {
 }
 
 export async function getInterestedUsers(adId: string): Promise<UserInfo[]> {
-  const response = await api.get<ApiResponse<UserInfo[]>>(`/anuncios/${adId}/favoritos`);
-  return response.data.data; // retorna apenas o array de UserInfo
+  const response = await api.get(`/anuncios/${adId}/favoritos`);
+  return response.data;
 }
 
 export async function getAdById(adId: string): Promise<ApiResponse<Ad>> {
