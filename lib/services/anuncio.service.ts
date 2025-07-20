@@ -117,6 +117,24 @@ class AnuncioService {
     const response = await api.get(`/account/favoritos`);
     return { data: response.data, status: response.status };
   }
+
+  async comentar(id: string, comentario: string, comentarioPaiId: string | null) {
+    const response = await api.post(`/api/anuncios/${id}/comentarios`, {
+      texto: comentario,
+      comentarioPaiId: comentarioPaiId,
+    });
+    return { data: response.data, status: response.status };
+  }
+
+  async listarComentarios(id: string) {
+    const response = await api.get(`/api/anuncios/${id}/comentarios`);
+    return { data: response.data, status: response.status };
+  }
+
+  async excluirComentario(id: string, comentarioId: string) {
+    const response = await api.delete(`/api/anuncios/${id}/comentarios/${comentarioId}`);
+    return { data: response.data, status: response.status };
+  }
 }
 
-export const anuncioService = new AnuncioService(); 
+export const anuncioService = new AnuncioService();
