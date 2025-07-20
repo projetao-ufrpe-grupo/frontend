@@ -140,3 +140,11 @@ export interface Foto {
   dadosBase64: string;
   arquivo?: File; // opcional, usado para upload
 }
+
+export interface Comentario {
+  id: string;
+  texto: string;
+  autor: string;
+  criadoEm: string;
+  respostas: Comentario[];
+}

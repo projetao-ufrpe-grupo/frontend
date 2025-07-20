@@ -110,7 +110,7 @@ type ListingFormProps = {
 
 export default function ListingForm({ mode = 'create', initialData }: ListingFormProps) {
   const [currentStep, setCurrentStep] = useState(1)
-  console.log("Initial Data:", initialData)
+
   const [formData, setFormData] = useState<FormData>({
   
     // Dados do Imóvel
@@ -256,8 +256,6 @@ function formatAddress(
       complemento: formData.complemento,
       caracteristicas: formData.features,
     };
-
-    console.log("Cleaned Payload:", requestPayload); // Verify before sending
 
       // 4. Criar/Atualizar anúncio
       if (mode === "edit" && initialData?.id) {
