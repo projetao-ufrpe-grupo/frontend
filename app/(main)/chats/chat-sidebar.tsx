@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useMobile } from "@/hooks/use-mobile"
 import { authService } from "@/lib/services/auth.service"
-import { chatService } from "@/lib/services/chat.service"
+import { chatService, type ChatMessage } from "@/lib/services/chat.service"
 import { cn } from "@/lib/utils"
 import { Loader2, Search, User, X } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -16,7 +16,7 @@ interface ChatSidebarProps {
   setActiveContact: (contact: Contact) => void
   isMobileSidebarOpen: boolean
   setIsMobileSidebarOpen: (isOpen: boolean) => void
-  selectedUserId?: string // ID do usuário selecionado via URL
+  selectedUserId?: string
 }
 
 export function ChatSidebar({
@@ -32,16 +32,42 @@ export function ChatSidebar({
   const isMobile = useMobile()
 
   useEffect(() => {
-    loadContacts()
+    let isMounted = true
+
+    const loadData = async () => {
+      if (!isMounted) return
+
+      try {
+        setLoading(true)
+        const userInfo = authService.getUserInfo()
+        if (!userInfo || !isMounted) return
+
+        const contactsList = await chatService.getContacts(userInfo.id)
+        if (isMounted) {
+          setContacts(contactsList)
+        }
+      } catch (error) {
+        console.error("Error loading contacts:", error)
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadData()
 
     // Conectar ao WebSocket para receber mensagens em tempo real
     const handleNewMessage = (message: ChatMessage) => {
-      updateContactWithNewMessage(message)
+      if (isMounted) {
+        updateContactWithNewMessage(message)
+      }
     }
 
     chatService.addMessageHandler(handleNewMessage)
 
     return () => {
+      isMounted = false
       chatService.removeMessageHandler(handleNewMessage)
     }
   }, [])
@@ -52,28 +78,21 @@ export function ChatSidebar({
       if (existingContact) {
         setActiveContact(existingContact)
       } else {
-        createTemporaryContact(selectedUserId)
+        if (!loading) {
+          createTemporaryContact(selectedUserId)
+        }
       }
     }
-  }, [selectedUserId, contacts])
-
-  const loadContacts = async () => {
-    try {
-      setLoading(true)
-      const userInfo = authService.getUserInfo()
-      if (!userInfo) return
-
-      const contactsList = await chatService.getContacts(userInfo.id)
-      setContacts(contactsList)
-    } catch (error) {
-      console.error("Error loading contacts:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [selectedUserId, contacts, loading])
 
   const createTemporaryContact = async (userId: string) => {
     try {
+      const existingContact = contacts.find((c) => c.id === userId)
+      if (existingContact) {
+        setActiveContact(existingContact)
+        return
+      }
+
       const userInfo = await authService.getUserById(userId)
       const newContact: Contact = {
         id: userId,
@@ -85,7 +104,13 @@ export function ChatSidebar({
         online: false,
       }
 
-      setContacts((prev) => [newContact, ...prev])
+      setContacts((prev) => {
+        const stillExists = prev.find((c) => c.id === userId)
+        if (stillExists) {
+          return prev
+        }
+        return [newContact, ...prev]
+      })
       setActiveContact(newContact)
     } catch (error) {
       console.error("Error creating temporary contact:", error)
@@ -106,16 +131,24 @@ export function ChatSidebar({
       const existingContactIndex = updatedContacts.findIndex((c) => c.id === contactId)
 
       if (existingContactIndex >= 0) {
+        // Atualizar contato existente
         updatedContacts[existingContactIndex] = {
           ...updatedContacts[existingContactIndex],
           lastMessage: message.content,
           lastMessageTime: chatService.formatMessageTime(message.date),
-          unreadCount: isIncoming ? updatedContacts[existingContactIndex].unreadCount + 1 : 0,
+          unreadCount:
+            isIncoming && activeContact?.id !== contactId
+              ? updatedContacts[existingContactIndex].unreadCount + 1
+              : updatedContacts[existingContactIndex].unreadCount,
         }
 
-        const contact = updatedContacts.splice(existingContactIndex, 1)[0]
-        updatedContacts.unshift(contact)
+        // Mover para o topo apenas se não estiver já no topo
+        if (existingContactIndex !== 0) {
+          const contact = updatedContacts.splice(existingContactIndex, 1)[0]
+          updatedContacts.unshift(contact)
+        }
       } else {
+        // Criar novo contato apenas se não existir
         const newContact: Contact = {
           id: contactId,
           name: contactName,
@@ -198,6 +231,8 @@ export function ChatSidebar({
               )}
               onClick={() => {
                 setActiveContact(contact)
+                // Zerar contador de não lidas quando selecionar o contato
+                setContacts((prev) => prev.map((c) => (c.id === contact.id ? { ...c, unreadCount: 0 } : c)))
                 if (isMobile) {
                   setIsMobileSidebarOpen(false)
                 }

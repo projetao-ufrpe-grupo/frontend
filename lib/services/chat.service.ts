@@ -57,7 +57,7 @@ class ChatService {
 
   async getConversation(fromUserId: string, toUserId: string): Promise<ChatConversation> {
     const response = await api.get<ChatConversation>(
-      `/chat/conversation?fromUserId=${fromUserId}&toUserId=${toUserId}&page=0&size=20`,
+      `/chat/conversation?fromUserId=${fromUserId}&toUserId=${toUserId}&page=0&size=999`,
     )
     return response.data
   }
