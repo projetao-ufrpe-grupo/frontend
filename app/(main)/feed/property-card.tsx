@@ -1,19 +1,20 @@
 "use client";
 
-import SafeImage from "@/components/listing/safe-image"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { useFavorites } from "@/hooks/use-favorites"
-import { formatCurrency } from "@/lib/utils"
-import { Heart, MapPin } from "lucide-react"
-import Link from "next/link"
+import SafeImage from "@/components/listing/safe-image";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { useFavorites } from "@/hooks/use-favorites";
+import { formatCurrency } from "@/lib/utils";
+import { Heart, MapPin } from "lucide-react";
+import Link from "next/link";
 
 interface PropertyCardProps {
   property: {
     id: string
     aluguel: number
     condominio: number
+    vagas: number
     caucao: number
     duracaoMinimaContrato: number
     descricao: string
@@ -203,6 +204,14 @@ export default function PropertyCard({
             )}
           </div>
         </div>
+
+        {property.vagas > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Badge variant="outline" className="rounded-full">
+              {property.qtdQuartos}/{property.vagas} Vagas disponíveis
+            </Badge>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent>
