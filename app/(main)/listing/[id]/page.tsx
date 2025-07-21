@@ -1,5 +1,6 @@
 "use client";
 
+import CommentsSection from "@/components/comments-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,31 +10,31 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getInterestedUsers } from "@/lib/services/ad.service";
 import { anuncioService } from "@/lib/services/anuncio.service";
+import { Comentario, UserInfo } from "@/lib/services/types";
 import { formatCurrency } from "@/lib/utils";
 import {
   Bath,
   BedDouble,
   Calendar,
   CheckCircle2,
+  Loader2,
   MapPin,
+  MessageSquare,
   Ruler,
   Share2,
-  Loader2,
-  MessageSquare,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, use } from "react";
+import { use, useEffect, useState } from "react";
 import InterestedUsers from "./interested-users";
-import { getInterestedUsers } from "@/lib/services/ad.service";
-import { Comentario, UserInfo } from "@/lib/services/types";
-import CommentsSection from "@/components/comments-section";
 
 interface Anuncio {
   id: string;
   descricao: string;
   enderecoCompleto: string;
+  vagas: number;
   qtdQuartos: number;
   qtdBanheiros: number;
   area: number;
@@ -176,6 +177,15 @@ export default function ListingPage({
             Disponível a partir de{" "}
             {new Date(anuncio.dataDisponibilidade).toLocaleDateString("pt-BR")}
           </Badge>
+
+          {anuncio.vagas > 0 && (
+            <Badge
+              variant="secondary"
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-base"
+            >
+              {anuncio.qtdQuartos}/{anuncio.vagas} Vagas disponíveis
+            </Badge>
+          )}
         </div>
       </div>
 
