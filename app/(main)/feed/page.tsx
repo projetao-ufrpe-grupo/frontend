@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -50,27 +51,26 @@ export default function FeedPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
+  const handleSearch = async (filters = {}) => {
+    setIsLoading(true);
+    try {
+      const allFilters = { ...filters, nome: searchTerm };
+      const response = await anuncioService.search(allFilters);
+      const anunciosDisponiveis = response.data.filter(
+        (anuncio) => !anuncio.pausado
+      );
+      setAnuncios(anunciosDisponiveis);
+      setTotalPages(Math.ceil(anunciosDisponiveis.length / 10));
+    } catch (error) {
+      console.error("Erro ao buscar anúncios:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchAnuncios = async () => {
-      setIsLoading(true);
-      try {
-        const response = await anuncioService.listar();
-
-        const anunciosDisponiveis = response.data.filter(
-          (anuncio) => !anuncio.pausado
-        );
-
-        setAnuncios(anunciosDisponiveis);
-        setTotalPages(Math.ceil(response.data.length / 10));
-      } catch (error) {
-        console.error("Erro ao buscar anúncios:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchAnuncios();
-  }, []);
+    handleSearch();
+  }, [searchTerm]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -179,12 +179,14 @@ export default function FeedPage() {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="w-[400px] sm:w-[500px] rounded-l-3xl"
+              className="w-[400px] sm:w-[500px] rounded-l-3xl flex flex-col"
             >
               <SheetHeader className="mb-8">
                 <SheetTitle className="text-2xl font-bold">Filtros</SheetTitle>
               </SheetHeader>
-              <FilterSidebar onApply={() => setOpenFilter(false)} />
+              <ScrollArea className="flex-grow"> 
+                <FilterSidebar onApply={(filters) => { handleSearch(filters); setOpenFilter(false); }} />
+              </ScrollArea>
             </SheetContent>
           </Sheet>
         </div>

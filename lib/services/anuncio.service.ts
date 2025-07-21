@@ -48,6 +48,21 @@ class AnuncioService {
     return { data: response.data, status: response.status };
   }
 
+  async search(filters: {
+    tipo?: string;
+    areaMin?: number;
+    areaMax?: number;
+    precoTotalMin?: number;
+    precoTotalMax?: number;
+    caracteristicas?: string[];
+    nome?: string;
+  }): Promise<ApiResponse<Anuncio[]>> {
+    const response = await api.get<Anuncio[]>('/anuncios/search', {
+      params: filters,
+    });
+    return { data: response.data, status: response.status };
+  }
+
   async listarPorUsuario(usuarioId: string): Promise<ApiResponse<Anuncio[]>> {
     const response = await api.get<Anuncio[]>(`/anuncios/anunciante/${usuarioId}`);
     return { data: response.data, status: response.status };

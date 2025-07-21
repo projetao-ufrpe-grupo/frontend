@@ -9,12 +9,20 @@ import { Slider } from "@/components/ui/slider"
 import { useState } from "react"
 
 interface FilterSidebarProps {
-  onApply?: () => void
+  onApply?: (filters: any) => void;
 }
 
 export default function FilterSidebar({ onApply }: FilterSidebarProps) {
-  const [priceRange, setPriceRange] = useState([0, 2000])
-  const [distanceRange, setDistanceRange] = useState([0, 5])
+  const [priceRange, setPriceRange] = useState([0, 2000]);
+  const [distanceRange, setDistanceRange] = useState([0, 5]);
+  const [filters, setFilters] = useState({});
+
+  const handleApply = () => {
+    if (onApply) {
+      onApply(filters);
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -23,17 +31,16 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
 
       <div className="space-y-4">
         <h3 className="font-medium">Universidade</h3>
-        <Select>
+        <Select onValueChange={(value) => setFilters({ ...filters, tipo: value })}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione uma universidade" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="usp">USP</SelectItem>
-            <SelectItem value="unicamp">UNICAMP</SelectItem>
-            <SelectItem value="ufrj">UFRJ</SelectItem>
-            <SelectItem value="ufmg">UFMG</SelectItem>
-            <SelectItem value="unb">UnB</SelectItem>
-            <SelectItem value="puc">PUC</SelectItem>
+            <SelectItem value="APARTAMENTO">Apartamento</SelectItem>
+            <SelectItem value="CASA">Casa</SelectItem>
+            <SelectItem value="QUARTO">Quarto</SelectItem>
+            <SelectItem value="STUDIO">Studio</SelectItem>
+            <SelectItem value="KITNET">Kitnet</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -74,7 +81,7 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
           <span>R${priceRange[0]}</span>
           <span>R${priceRange[1]}</span>
         </div>
-        <Slider defaultValue={[0, 2000]} min={0} max={5000} step={100} onValueChange={setPriceRange} />
+        <Slider defaultValue={[0, 2000]} min={0} max={5000} step={100} onValueChange={(value) => setFilters({ ...filters, precoTotalMin: value[0], precoTotalMax: value[1] })} />
       </div>
 
       <Separator />
@@ -85,7 +92,7 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
           <span>{distanceRange[0]} km</span>
           <span>{distanceRange[1]} km</span>
         </div>
-        <Slider defaultValue={[0, 5]} min={0} max={15} step={0.5} onValueChange={setDistanceRange} />
+        <Slider defaultValue={[0, 5]} min={0} max={15} step={0.5} onValueChange={(value) => setFilters({ ...filters, areaMin: value[0], areaMax: value[1] })} />
       </div>
 
       <Separator />
@@ -94,24 +101,12 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
         <h3 className="font-medium">Características</h3>
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <Checkbox id="furnished" />
-            <Label htmlFor="furnished">Mobiliado</Label>
+            <Checkbox id="PISCINA" onCheckedChange={(checked) => setFilters({ ...filters, caracteristicas: [...(filters.caracteristicas || []), 'PISCINA'] })} />
+            <Label htmlFor="PISCINA">Piscina</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <Checkbox id="internet" />
-            <Label htmlFor="internet">Internet</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox id="parking" />
-            <Label htmlFor="parking">Estacionamento</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox id="laundry" />
-            <Label htmlFor="laundry">Lavanderia</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox id="security" />
-            <Label htmlFor="security">Segurança 24h</Label>
+            <Checkbox id="GARAGEM" onCheckedChange={(checked) => setFilters({ ...filters, caracteristicas: [...(filters.caracteristicas || []), 'GARAGEM'] })} />
+            <Label htmlFor="GARAGEM">Garagem</Label>
           </div>
         </div>
       </div>
@@ -149,7 +144,7 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
         <Button variant="outline" className="flex-1">
           Limpar
         </Button>
-        <Button className="flex-1" onClick={onApply}>
+        <Button className="flex-1" onClick={handleApply}>
           Aplicar
         </Button>
       </div>
