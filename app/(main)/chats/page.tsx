@@ -1,14 +1,17 @@
 "use client"
 
-import { useState } from "react"
-import { ChatSidebar } from "./chat-sidebar"
-import { ChatArea } from "./chat-area"
-import type { Contact } from "./types"
 import { MessageCircle } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import { useState } from "react"
+import { ChatArea } from "./chat-area"
+import { ChatSidebar } from "./chat-sidebar"
+import type { Contact } from "./types"
 
 export default function ChatsPage() {
   const [activeContact, setActiveContact] = useState<Contact | null>(null)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const searchParams = useSearchParams()
+  const selectedUserId = searchParams.get("user")
 
   return (
     <div className="container py-6">
@@ -27,6 +30,7 @@ export default function ChatsPage() {
           setActiveContact={setActiveContact}
           isMobileSidebarOpen={isMobileSidebarOpen}
           setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+          selectedUserId={selectedUserId || undefined}
         />
 
         {/* Área principal de chat */}

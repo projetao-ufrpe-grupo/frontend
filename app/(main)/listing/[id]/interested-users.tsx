@@ -1,20 +1,18 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
-import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MessageSquare, Search, Users, ChevronDown, ChevronUp, X } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { UserInterestResponse, enumsService } from "@/lib/services/enums.service"
-import { UserInfo } from "@/lib/services/types"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { type UserInterestResponse, enumsService } from "@/lib/services/enums.service"
+import type { UserInfo } from "@/lib/services/types"
+import { ChevronDown, ChevronUp, MessageSquare, Search, Users, X } from "lucide-react"
+import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
 import { mockedUsers } from "./mocked-users"
 
-
 export default function InterestedUsers({ interestedUsers }: { interestedUsers: UserInfo[] }) {
-  // Add explicit types for state variables
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [usingMockData, setUsingMockData] = useState(interestedUsers.length === 0)
@@ -22,7 +20,6 @@ export default function InterestedUsers({ interestedUsers }: { interestedUsers: 
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [isTagsMenuOpen, setIsTagsMenuOpen] = useState(false)
 
-  // Carrega as tags disponíveis
   useEffect(() => {
     const loadTags = async () => {
       setIsLoading(true)
@@ -31,7 +28,6 @@ export default function InterestedUsers({ interestedUsers }: { interestedUsers: 
         setAvailableTags(tags)
       } catch (error) {
         console.error("Erro ao carregar tags:", error)
-        // Opcional: setErrorState(true)
       } finally {
         setIsLoading(false)
       }
@@ -39,46 +35,33 @@ export default function InterestedUsers({ interestedUsers }: { interestedUsers: 
     loadTags()
   }, [])
 
-  // Simular carregamento ao montar o componente
   useEffect(() => {
-  setIsLoading(true)
-  const timer = setTimeout(() => {
-    setIsLoading(false)
-    setUsingMockData(interestedUsers.length === 0)
-  }, 1500)
-  return () => clearTimeout(timer)
-}, [interestedUsers])
+    setIsLoading(true)
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+      setUsingMockData(interestedUsers.length === 0)
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [interestedUsers])
 
-  // Filtra usuários quando a busca ou tags mudam
   const filteredUsers = useMemo(() => {
-  let filtered = usingMockData ? mockedUsers : interestedUsers
-  
-  if (searchQuery.trim() !== "") {
-    filtered = filtered.filter(
-      (user) =>
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.curso?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.universidade?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }
-  
-  if (selectedTags.length > 0) {
-    filtered = filtered.filter(user => 
-      selectedTags.every(tag => 
-        user.interesses?.includes(tag)
+    let filtered = usingMockData ? mockedUsers : interestedUsers
+    if (searchQuery.trim() !== "") {
+      filtered = filtered.filter(
+        (user) =>
+          user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.curso?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.universidade?.toLowerCase().includes(searchQuery.toLowerCase()),
       )
-    )
-  }
-  
-  return filtered
-}, [searchQuery, selectedTags, interestedUsers, usingMockData])
+    }
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter((user) => selectedTags.every((tag) => user.interesses?.includes(tag)))
+    }
+    return filtered
+  }, [searchQuery, selectedTags, interestedUsers, usingMockData])
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev =>
-      prev.includes(tag)
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    )
+    setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
   }
 
   const clearTags = () => {
@@ -93,34 +76,29 @@ export default function InterestedUsers({ interestedUsers }: { interestedUsers: 
           Usuários interessados
         </h3>
         {usingMockData && (
-          <p className="text-xs text-yellow-600 mb-2">
-            Modo de demonstração: utilizando dados mockados
-          </p>
+          <p className="text-xs text-yellow-600 mb-2">Modo de demonstração: utilizando dados mockados</p>
         )}
         <div className="mb-3">
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Buscar usuários..." 
-              className="pl-9" 
-              disabled 
-              value=""
-            />
+            <Input placeholder="Buscar usuários..." className="pl-9" disabled value="" />
           </div>
         </div>
         <div className="space-y-3 flex-1">
-          {Array(8).fill(0).map((_, i) => (
-            <div key={i} className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="skeleton h-10 w-10 rounded-full" />
-                <div>
-                  <div className="skeleton h-5 w-32 mb-1" />
-                  <div className="skeleton h-4 w-24" />
+          {Array(8)
+            .fill(0)
+            .map((_, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="skeleton h-10 w-10 rounded-full" />
+                  <div>
+                    <div className="skeleton h-5 w-32 mb-1" />
+                    <div className="skeleton h-4 w-24" />
+                  </div>
                 </div>
+                <div className="skeleton h-8 w-8" />
               </div>
-              <div className="skeleton h-8 w-8" />
-            </div>
-          ))}
+            ))}
         </div>
       </div>
     )
@@ -146,7 +124,6 @@ export default function InterestedUsers({ interestedUsers }: { interestedUsers: 
               Filtrar por interesses
               {isTagsMenuOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </Button>
-            
             {selectedTags.length > 0 && (
               <Button
                 variant="ghost"
@@ -159,11 +136,10 @@ export default function InterestedUsers({ interestedUsers }: { interestedUsers: 
               </Button>
             )}
           </div>
-
           {isTagsMenuOpen && (
             <div className="p-2 border rounded-lg bg-muted/50">
               <div className="flex flex-wrap gap-2">
-                {availableTags.map(tag => (
+                {availableTags.map((tag) => (
                   <Badge
                     key={tag.value}
                     variant={selectedTags.includes(tag.value) ? "default" : "outline"}
@@ -176,24 +152,14 @@ export default function InterestedUsers({ interestedUsers }: { interestedUsers: 
               </div>
             </div>
           )}
-
-          {/* Mostrar tags selecionadas */}
           {selectedTags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1">
-              {selectedTags.map(tag => {
-                const tagInfo = availableTags.find(t => t.value === tag)
+              {selectedTags.map((tag) => {
+                const tagInfo = availableTags.find((t) => t.value === tag)
                 return (
-                  <Badge
-                    key={tag}
-                    variant="default"
-                    className="flex items-center gap-1"
-                  >
+                  <Badge key={tag} variant="default" className="flex items-center gap-1">
                     {tagInfo?.description || tag}
-                    <X
-                      size={12}
-                      className="cursor-pointer hover:opacity-80"
-                      onClick={() => toggleTag(tag)}
-                    />
+                    <X size={12} className="cursor-pointer hover:opacity-80" onClick={() => toggleTag(tag)} />
                   </Badge>
                 )
               })}
@@ -234,8 +200,8 @@ export default function InterestedUsers({ interestedUsers }: { interestedUsers: 
                       {user.universidade} • {user.curso}
                     </p>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {user.interesses?.slice(0, 3).map(interest => {
-                        const tag = availableTags.find(t => t.value === interest)
+                      {user.interesses?.slice(0, 3).map((interest) => {
+                        const tag = availableTags.find((t) => t.value === interest)
                         return tag ? (
                           <Badge key={tag.value} variant="outline" className="text-xs h-5">
                             {tag.description}
@@ -271,8 +237,8 @@ export default function InterestedUsers({ interestedUsers }: { interestedUsers: 
           </div>
         ) : (
           <p className="text-center text-muted-foreground py-4">
-            {searchQuery || selectedTags.length > 0 
-              ? "Nenhum usuário encontrado com esses critérios" 
+            {searchQuery || selectedTags.length > 0
+              ? "Nenhum usuário encontrado com esses critérios"
               : "Nenhum usuário interessado"}
           </p>
         )}

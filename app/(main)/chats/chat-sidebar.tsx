@@ -4,65 +4,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useMobile } from "@/hooks/use-mobile"
+import { authService } from "@/lib/services/auth.service"
+import { chatService } from "@/lib/services/chat.service"
 import { cn } from "@/lib/utils"
-import { Search, User, X } from "lucide-react"
-import { useState } from "react"
+import { Loader2, Search, User, X } from "lucide-react"
+import { useEffect, useState } from "react"
 import type { Contact } from "./types"
-
-// Dados de exemplo
-const mockContacts: Contact[] = [
-  {
-    id: "1",
-    name: "Ana Silva",
-    avatar: "/images/user-profile.png",
-    lastMessage: "Olá, gostaria de saber mais sobre o apartamento",
-    lastMessageTime: "10:30",
-    unreadCount: 2,
-    online: true,
-  },
-  {
-    id: "2",
-    name: "Carlos Oliveira",
-    avatar: "/images/user-profile.png",
-    lastMessage: "O imóvel ainda está disponível?",
-    lastMessageTime: "Ontem",
-    unreadCount: 0,
-    online: false,
-  },
-  {
-    id: "3",
-    name: "Mariana Costa",
-    avatar: "/images/user-profile.png",
-    lastMessage: "Podemos agendar uma visita para amanhã?",
-    lastMessageTime: "Seg",
-    unreadCount: 1,
-    online: true,
-  },
-  {
-    id: "4",
-    name: "Pedro Santos",
-    avatar: "/images/user-profile.png",
-    lastMessage: "Obrigado pelas informações!",
-    lastMessageTime: "Dom",
-    unreadCount: 0,
-    online: false,
-  },
-  {
-    id: "5",
-    name: "Juliana Mendes",
-    avatar: "/images/user-profile.png",
-    lastMessage: "Qual o valor do condomínio?",
-    lastMessageTime: "Sex",
-    unreadCount: 0,
-    online: true,
-  },
-]
 
 interface ChatSidebarProps {
   activeContact: Contact | null
   setActiveContact: (contact: Contact) => void
   isMobileSidebarOpen: boolean
   setIsMobileSidebarOpen: (isOpen: boolean) => void
+  selectedUserId?: string // ID do usuário selecionado via URL
 }
 
 export function ChatSidebar({
@@ -70,13 +24,130 @@ export function ChatSidebar({
   setActiveContact,
   isMobileSidebarOpen,
   setIsMobileSidebarOpen,
+  selectedUserId,
 }: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [loading, setLoading] = useState(true)
   const isMobile = useMobile()
 
-  const filteredContacts = mockContacts.filter((contact) =>
-    contact.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  useEffect(() => {
+    loadContacts()
+
+    // Conectar ao WebSocket para receber mensagens em tempo real
+    const handleNewMessage = (message: ChatMessage) => {
+      updateContactWithNewMessage(message)
+    }
+
+    chatService.addMessageHandler(handleNewMessage)
+
+    return () => {
+      chatService.removeMessageHandler(handleNewMessage)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (selectedUserId && contacts.length > 0) {
+      const existingContact = contacts.find((c) => c.id === selectedUserId)
+      if (existingContact) {
+        setActiveContact(existingContact)
+      } else {
+        createTemporaryContact(selectedUserId)
+      }
+    }
+  }, [selectedUserId, contacts])
+
+  const loadContacts = async () => {
+    try {
+      setLoading(true)
+      const userInfo = authService.getUserInfo()
+      if (!userInfo) return
+
+      const contactsList = await chatService.getContacts(userInfo.id)
+      setContacts(contactsList)
+    } catch (error) {
+      console.error("Error loading contacts:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const createTemporaryContact = async (userId: string) => {
+    try {
+      const userInfo = await authService.getUserById(userId)
+      const newContact: Contact = {
+        id: userId,
+        name: `${userInfo.name}`,
+        avatar: userInfo.fotoPerfil,
+        lastMessage: "Iniciar conversa",
+        lastMessageTime: "Agora",
+        unreadCount: 0,
+        online: false,
+      }
+
+      setContacts((prev) => [newContact, ...prev])
+      setActiveContact(newContact)
+    } catch (error) {
+      console.error("Error creating temporary contact:", error)
+    }
+  }
+
+  const updateContactWithNewMessage = (message: ChatMessage) => {
+    setContacts((prev) => {
+      const updatedContacts = [...prev]
+      const currentUser = authService.getUserInfo()
+
+      if (!currentUser) return prev
+
+      const isIncoming = message.fromUserId !== currentUser.id
+      const contactId = isIncoming ? message.fromUserId : message.toUserId
+      const contactName = isIncoming ? message.fromUserName : message.toUserName
+
+      const existingContactIndex = updatedContacts.findIndex((c) => c.id === contactId)
+
+      if (existingContactIndex >= 0) {
+        updatedContacts[existingContactIndex] = {
+          ...updatedContacts[existingContactIndex],
+          lastMessage: message.content,
+          lastMessageTime: chatService.formatMessageTime(message.date),
+          unreadCount: isIncoming ? updatedContacts[existingContactIndex].unreadCount + 1 : 0,
+        }
+
+        const contact = updatedContacts.splice(existingContactIndex, 1)[0]
+        updatedContacts.unshift(contact)
+      } else {
+        const newContact: Contact = {
+          id: contactId,
+          name: contactName,
+          lastMessage: message.content,
+          lastMessageTime: chatService.formatMessageTime(message.date),
+          unreadCount: isIncoming ? 1 : 0,
+          online: false,
+        }
+        updatedContacts.unshift(newContact)
+      }
+
+      return updatedContacts
+    })
+  }
+
+  const filteredContacts = contacts.filter((contact) => contact.name?.toLowerCase().includes(searchQuery?.toLowerCase()))
+
+  if (loading) {
+    return (
+      <div
+        className={cn(
+          "w-full md:w-80 border-r bg-background flex flex-col h-full",
+          isMobile && "fixed inset-0 z-40",
+          isMobile && !isMobileSidebarOpen && "hidden",
+        )}
+      >
+        <div className="p-4 border-b flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -91,7 +162,7 @@ export function ChatSidebar({
         <div className="flex items-center gap-2">
           <User className="h-8 w-8 text-blue-500" />
           <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
-            Conexões
+            Conversas
           </h2>
         </div>
         {isMobile && (
@@ -158,7 +229,9 @@ export function ChatSidebar({
             </div>
           ))
         ) : (
-          <div className="p-4 text-center text-muted-foreground">Nenhuma conversa encontrada</div>
+          <div className="p-4 text-center text-muted-foreground">
+            {searchQuery ? "Nenhuma conversa encontrada" : "Nenhuma conversa ainda"}
+          </div>
         )}
       </div>
     </div>
