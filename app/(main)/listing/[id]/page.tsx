@@ -317,12 +317,6 @@ export default function ListingPage({
             </TabsContent>
 
             <TabsContent value="location">
-              <h2 className="text-2xl font-bold mb-6">Localização</h2>
-              <div className="aspect-video bg-muted rounded-3xl flex items-center justify-center mb-6">
-                <p className="text-muted-foreground text-lg">
-                  Mapa da localização
-                </p>
-              </div>
               <div>
                 <h3 className="text-xl font-bold mb-4">Endereço</h3>
                 <div className="flex items-center gap-3">

@@ -128,7 +128,7 @@ export interface Anuncio {
   dataDisponibilidade: string;
   enderecoCompleto: string;
   caracteristicas: string[];
-  fotosBase64: Foto[];
+  fotos: Foto[];
   anunciante: {
     id: string;
     name: string;
