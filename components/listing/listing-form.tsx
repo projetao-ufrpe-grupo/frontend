@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import api from "@/lib/axios"
 import { anuncioService } from "@/lib/services/anuncio.service"
-import { Ad } from "@/lib/services/types"
+import { Ad, Foto } from "@/lib/services/types"
 import {
   ArrowLeft,
   ArrowRight,
@@ -98,7 +99,7 @@ interface FormData {
   duracao_minima_contrato: string;
   description: string;
   features: string[];
-  images: string[];
+  images: Foto[];
   availableFrom: string;
 }
 
@@ -109,8 +110,10 @@ type ListingFormProps = {
 
 export default function ListingForm({ mode = 'create', initialData }: ListingFormProps) {
   const [currentStep, setCurrentStep] = useState(1)
+
   const [formData, setFormData] = useState<FormData>({
-    // Unificar nomes usando sempre snake_case
+  
+    // Dados do Imóvel
     id: initialData?.id ?? "",
     tipo: initialData?.imovel?.tipo ?? "",
     logradouro: initialData?.imovel?.logradouro ?? "",
@@ -120,20 +123,23 @@ export default function ListingForm({ mode = 'create', initialData }: ListingFor
     cidade: initialData?.imovel?.cidade ?? "",
     estado: initialData?.imovel?.estado ?? "",
     cep: initialData?.imovel?.cep ?? "",
-    qtd_quartos: initialData?.imovel?.qtd_quartos?.toString() ?? "",
-    qtd_banheiros: initialData?.imovel?.qtd_banheiros?.toString() ?? "",
+    qtd_quartos: initialData?.imovel?.qtd_quartos?.toString() ?? "0",
+    qtd_banheiros: initialData?.imovel?.qtd_banheiros?.toString() ?? "1",
     area: initialData?.imovel?.area?.toString() ?? "",
 
+    // Dados do Anúncio
     title: initialData?.title ?? "",
     aluguel: initialData?.aluguel?.toString() ?? "",
-    condominio: initialData?.condominio?.toString() ?? "",
-    caucao: initialData?.caucao?.toString() ?? "",
+    condominio: initialData?.condominio?.toString() ?? "0",
+    caucao: initialData?.caucao?.toString() ?? "0",
     universidade: initialData?.universidade ?? "USP",
     duracao_minima_contrato: initialData?.duracao_minima_contrato?.toString() ?? "6",
     description: initialData?.description ?? initialData?.imovel?.descricao ?? "",
-    features: initialData?.features ?? [],
-    images: initialData?.images ?? [],
-    availableFrom: initialData?.availableFrom ?? new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD
+    features: initialData?.features ? [...initialData.features] : [],
+    images: initialData?.images ? [...initialData.images] : [],
+    availableFrom: initialData?.availableFrom 
+      ? new Date(initialData.availableFrom).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
@@ -212,12 +218,8 @@ function formatAddress(
     try {
 
       // Validar campos obrigatórios
-      if (!formData.tipo || !formData.logradouro || !formData.cidade || !formData.estado || !formData.cep
-        || !formData.qtd_quartos || !formData.qtd_banheiros || !formData.area || !formData.aluguel
-        || !formData.duracao_minima_contrato || !formData.description || !formData.features.length
-        || !formData.availableFrom
-      ) {
-        toast.error("Por favor, preencha todos os campos obrigatórios");
+      if (!formData.tipo || !formData.logradouro || !formData.cidade || !formData.estado) {
+        alert("Por favor, preencha todos os campos obrigatórios (Tipo, Endereço, Cidade e Estado)");
         return;
       }
 
@@ -235,33 +237,49 @@ function formatAddress(
 
       // Preparar o payload no formato esperado pela API
       const requestPayload = {
-        aluguel: parseFloat(formData.aluguel),
-        condominio: formData.condominio ? parseFloat(formData.condominio) : 0,
-        caucao: formData.caucao ? parseFloat(formData.caucao) : 0,
-        duracaoMinimaContrato: parseInt(formData.duracao_minima_contrato),
-        area: parseFloat(formData.area),
-        descricao: formData.description,
-        tipo: mapTipoImovel(formData.tipo),
-        dataDisponibilidade: formData.availableFrom,
-        qtdQuartos: parseInt(formData.qtd_quartos),
-        qtdBanheiros: parseInt(formData.qtd_banheiros),
-        cep: formData.cep.replace(/\D/g, ''),
-        cidade: formData.cidade,
-        estado: formData.estado,
-        logradouro: formData.logradouro,
-        numero: formData.numero,
-        bairro: formData.bairro,
-        complemento: formData.complemento || "",
-        caracteristicas: formData.features
-      };
+      aluguel: parseFloat(formData.aluguel) || 0,
+      condominio: formData.condominio ? parseFloat(formData.condominio) : 0,
+      caucao: formData.caucao ? parseFloat(formData.caucao) : 0,
+      duracaoMinimaContrato: parseInt(formData.duracao_minima_contrato) || 0,
+      area: parseFloat(formData.area) || 0,
+      descricao: formData.description,
+      tipo: mapTipoImovel(formData.tipo),
+      dataDisponibilidade: formData.availableFrom,
+      qtdQuartos: parseInt(formData.qtd_quartos) || 0,  // Use consistent naming
+      qtdBanheiros: parseInt(formData.qtd_banheiros) || 0, // Remove duplicates
+      cep: formData.cep.replace(/\D/g, ''),
+      cidade: formData.cidade,
+      estado: formData.estado,
+      logradouro: formData.logradouro,
+      numero: formData.numero,
+      bairro: formData.bairro,
+      complemento: formData.complemento,
+      caracteristicas: formData.features,
+    };
 
-      
-
-      if (mode === 'edit' && initialData?.id) {
+      // 4. Criar/Atualizar anúncio
+      if (mode === "edit" && initialData?.id) {
+        
         await anuncioService.atualizar(initialData.id, requestPayload, selectedFiles);
-        toast.success('Anúncio atualizado com sucesso!');
+        alert("Anúncio atualizado com sucesso!");
       } else {
-        await anuncioService.criar(requestPayload, selectedFiles);
+        try {
+          console.log("Submitting payload:", requestPayload);
+          await anuncioService.criar(requestPayload, selectedFiles);
+        } catch (error) {
+          if (typeof error === "object" && error !== null && "response" in error) {
+            const err = error as { response?: { status?: any; data?: any; headers?: any } };
+            console.error("Full error details:", {
+              status: err.response?.status,
+              data: err.response?.data,
+              headers: err.response?.headers
+            });
+          } else {
+            console.error("Full error details:", error);
+          }
+          toast.error('Erro ao criar anúncio. Por favor, tente novamente.');
+          return;
+        }
         toast.success('Anúncio criado com sucesso!');
       }
 
@@ -563,49 +581,6 @@ function formatAddress(
                 </div>
               </div>
 
-              {/* Data de disponibilidade e duração do contrato */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label htmlFor="contractDuration" className="text-base font-medium">
-                    Duração mínima do contrato (meses)
-                  </Label>
-                  <Input
-                    type="number"
-                    id="contractDuration"
-                    min="1"
-                    value={formData.duracao_minima_contrato}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      duracao_minima_contrato: e.target.value 
-                    })}
-                    placeholder="Ex: 12"
-                    className="h-12 rounded-xl"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="availableFrom" className="text-base font-medium">
-                    Data de Disponibilidade
-                  </Label>
-                  <Input
-                    type="date"
-                    id="availableFrom"
-                    value={formData.availableFrom}
-                    onChange={(e) => {
-                      // Garante que o valor é uma data válida no formato yyyy-mm-dd
-                      if (e.target.validity.valid) {
-                        setFormData({ 
-                          ...formData, 
-                          availableFrom: e.target.value 
-                        });
-                      }
-                    }}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="h-12 rounded-xl w-full"
-                    pattern="\d{4}-\d{2}-\d{2}" // Padrão yyyy-mm-dd
-                  />
-                </div>
-              </div>
-
               <div className="space-y-4">
                 <Label className="text-base font-medium">Características</Label>
                 <TagCardsSelector
@@ -799,6 +774,47 @@ function formatAddress(
                           className="absolute top-2 right-2 h-8 w-8 rounded-full"
                           onClick={() => {
                             setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+                          }}
+                        >
+                          <X size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {formData.images.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-semibold mb-3">Fotos do imóvel:</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {formData.images.map((image, index) => (
+                      <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                        <img
+                          src={`data:image/jpeg;base64,${image.dadosBase64}`}
+                          alt={`Foto ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                          onClick={async () => {
+                            // Remove a imagem localmente do estado
+                            setFormData((prev) => ({
+                              ...prev,
+                              images: prev.images.filter((_, i) => i !== index),
+                            }));
+                            
+                            // Chama a API para excluir a foto do servidor
+                            try {
+                              const fotoId = formData.images[index].id; // Supondo que cada imagem tenha um id
+                              await anuncioService.excluirFoto(formData.id, fotoId); // Supondo que formData.id seja o anuncioId
+                            } catch (error) {
+                              console.error("Erro ao excluir foto:", error);
+                              // Você pode querer reverter a remoção local se a chamada API falhar
+                              // ou mostrar uma mensagem de erro para o usuário
+                            }
                           }}
                         >
                           <X size={14} />

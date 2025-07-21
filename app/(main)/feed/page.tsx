@@ -21,6 +21,8 @@ export default function FeedPage() {
   const [openFilter, setOpenFilter] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [anuncios, setAnuncios] = useState<any[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isSearching, setIsSearching] = useState(false)
   const totalPages = 15
 
   useEffect(() => {
@@ -35,6 +37,20 @@ export default function FeedPage() {
 
     fetchAnuncios()
   }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchTerm.trim()) {
+        setIsSearching(true)
+        // Aqui você chamaria sua API de busca
+        console.log('Buscando por:', searchTerm)
+        // Simulando busca assíncrona
+        setTimeout(() => setIsSearching(false), 1000)
+      }
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
   // Função para gerar os números de página visíveis
   const getVisiblePages = () => {
@@ -81,6 +97,8 @@ export default function FeedPage() {
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Busque por universidade, bairro ou cidade..."
               className="h-12 pl-12 pr-4 rounded-2xl border-gray-200 bg-white shadow-sm ring-1 ring-gray-900/5 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700"
             />
