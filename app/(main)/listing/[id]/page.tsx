@@ -1,5 +1,4 @@
-"use client";
-
+import CommentsSection from "@/components/comments-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,26 +8,26 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getInterestedUsers } from "@/lib/services/ad.service";
 import { anuncioService } from "@/lib/services/anuncio.service";
+import { Comentario, UserInfo } from "@/lib/services/types";
 import { formatCurrency } from "@/lib/utils";
 import {
   Bath,
   BedDouble,
   Calendar,
   CheckCircle2,
+  Loader2,
   MapPin,
+  MessageSquare,
   Ruler,
   Share2,
-  Loader2,
-  MessageSquare,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, use } from "react";
+import { use, useEffect, useState } from "react";
 import InterestedUsers from "./interested-users";
-import { getInterestedUsers } from "@/lib/services/ad.service";
-import { Comentario, UserInfo } from "@/lib/services/types";
-import CommentsSection from "@/components/comments-section";
+import { ShareButton } from "./share-button";
 
 interface Anuncio {
   id: string;
@@ -394,6 +393,7 @@ export default function ListingPage({
                     Ver perfil
                   </Link>
                 </Button>
+                <ShareButton />
               </CardContent>
             </Card>
 
