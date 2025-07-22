@@ -16,7 +16,7 @@ export async function getAdById(adId: string): Promise<ApiResponse<Ad>> {
   return response.data; // retorna ApiResponse com data: Ad
 }
 
-interface Caracteristica {
+export interface Caracteristica {
   value: string
   description: string
 }

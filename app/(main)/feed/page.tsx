@@ -54,7 +54,7 @@ export default function FeedPage() {
   const handleSearch = async (filters = {}) => {
     setIsLoading(true);
     try {
-      const allFilters = { ...filters, nome: searchTerm };
+      const allFilters = { ...filters, titulo: searchTerm };
       const response = await anuncioService.search(allFilters);
       const anunciosDisponiveis = response.data.filter(
         (anuncio) => !anuncio.pausado
@@ -166,7 +166,7 @@ export default function FeedPage() {
             <Input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Busque por universidade, bairro ou cidade..."
+              placeholder="Busque pelo título do anúncio..."
               className="h-12 pl-12 pr-4 rounded-2xl border-gray-200 bg-white shadow-sm ring-1 ring-gray-900/5 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700"
             />
           </div>
