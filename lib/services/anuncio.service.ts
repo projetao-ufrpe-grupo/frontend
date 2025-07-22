@@ -55,7 +55,7 @@ class AnuncioService {
     precoTotalMin?: number;
     precoTotalMax?: number;
     caracteristicas?: string[];
-    nome?: string;
+    titulo?: string;
   }): Promise<ApiResponse<Anuncio[]>> {
     const response = await api.get<Anuncio[]>('/anuncios/search', {
       params: filters,
