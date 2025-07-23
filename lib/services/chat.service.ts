@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid'
 import api from "../axios"
 import { authService } from "./auth.service"
 
@@ -5,8 +6,10 @@ export interface ChatMessage {
   id: number
   fromUserId: string
   fromUserName: string
+  fromUserAvatar?: string
   toUserId: string
   toUserName: string
+  toUserAvatar?: string
   content: string
   type: string
   date: string
@@ -62,14 +65,12 @@ class ChatService {
     return response.data
   }
 
-  async getContacts(userId: string): Promise<Contact[]> {
-    try {
-      return []
-    } catch (error) {
-      console.error("Error fetching contacts:", error)
-      return []
-    }
+  async getConversations(): Promise<any[]> {
+    const response = await api.get<any[]>('/chat/conversations');
+    return response.data;
   }
+
+  
 
   connectWebSocket(onMessage: (message: ChatMessage) => void): void {
     const tokens = authService.getAuthTokens()
@@ -89,7 +90,6 @@ class ChatService {
       try {
         const message: ChatMessage = JSON.parse(event.data)
         onMessage(message)
-        // Notifica todos os handlers registrados
         this.messageHandlers.forEach((handler) => handler(message))
       } catch (error) {
         console.error("Error parsing WebSocket message:", error)
@@ -98,7 +98,6 @@ class ChatService {
 
     this.ws.onclose = () => {
       console.log("WebSocket disconnected")
-      // Tentar reconectar após 3 segundos
       setTimeout(() => {
         if (this.ws?.readyState === WebSocket.CLOSED) {
           this.connectWebSocket(onMessage)
@@ -117,6 +116,7 @@ class ChatService {
     }
 
     const message = {
+      messageId: uuidv4(),
       to,
       content,
       type: "private",

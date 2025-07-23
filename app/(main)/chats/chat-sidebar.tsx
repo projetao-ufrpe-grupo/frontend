@@ -42,12 +42,25 @@ export function ChatSidebar({
         const userInfo = authService.getUserInfo()
         if (!userInfo || !isMounted) return
 
-        const contactsList = await chatService.getContacts(userInfo.id)
+        const conversations = await chatService.getConversations()
+        const contactsList: Contact[] = conversations.map((conv: any) => {
+          const otherParticipant = conv.participantes.find((p: any) => p.id !== userInfo.id);
+          return {
+            id: otherParticipant.id,
+            name: otherParticipant.nome,
+            avatar: otherParticipant.fotoPerfil, // Assuming fotoPerfil exists on participant
+            lastMessage: conv.ultimasMensagens.length > 0 ? conv.ultimasMensagens[0].content : "Nenhuma mensagem",
+            lastMessageTime: conv.ultimasMensagens.length > 0 ? chatService.formatMessageTime(conv.ultimasMensagens[0].date) : "",
+            unreadCount: 0, // This will need to be handled by the backend or a separate mechanism
+            online: false, // This will need to be handled by a separate mechanism
+          };
+        });
+
         if (isMounted) {
           setContacts(contactsList)
         }
       } catch (error) {
-        console.error("Error loading contacts:", error)
+        console.error("Error loading conversations:", error)
       } finally {
         if (isMounted) {
           setLoading(false)
@@ -73,7 +86,39 @@ export function ChatSidebar({
   }, [])
 
   useEffect(() => {
-    if (selectedUserId && contacts.length > 0) {
+    const createTemporaryContact = async (userId: string) => {
+      try {
+        const existingContact = contacts.find((c) => c.id === userId)
+        if (existingContact) {
+          setActiveContact(existingContact)
+          return
+        }
+
+        const userInfo = await authService.getUserById(userId)
+        const newContact: Contact = {
+          id: userId,
+          name: `${userInfo.name}`,
+          avatar: userInfo.fotoPerfil,
+          lastMessage: "Iniciar conversa",
+          lastMessageTime: "Agora",
+          unreadCount: 0,
+          online: false,
+        }
+
+        setContacts((prev) => {
+          const stillExists = prev.find((c) => c.id === userId)
+          if (stillExists) {
+            return prev
+          }
+          return [...prev, newContact]
+        })
+        setActiveContact(newContact)
+      } catch (error) {
+        console.error("Error creating temporary contact:", error)
+      }
+    }
+
+    if (selectedUserId) {
       const existingContact = contacts.find((c) => c.id === selectedUserId)
       if (existingContact) {
         setActiveContact(existingContact)
@@ -83,39 +128,7 @@ export function ChatSidebar({
         }
       }
     }
-  }, [selectedUserId, contacts, loading])
-
-  const createTemporaryContact = async (userId: string) => {
-    try {
-      const existingContact = contacts.find((c) => c.id === userId)
-      if (existingContact) {
-        setActiveContact(existingContact)
-        return
-      }
-
-      const userInfo = await authService.getUserById(userId)
-      const newContact: Contact = {
-        id: userId,
-        name: `${userInfo.name}`,
-        avatar: userInfo.fotoPerfil,
-        lastMessage: "Iniciar conversa",
-        lastMessageTime: "Agora",
-        unreadCount: 0,
-        online: false,
-      }
-
-      setContacts((prev) => {
-        const stillExists = prev.find((c) => c.id === userId)
-        if (stillExists) {
-          return prev
-        }
-        return [newContact, ...prev]
-      })
-      setActiveContact(newContact)
-    } catch (error) {
-      console.error("Error creating temporary contact:", error)
-    }
-  }
+  }, [selectedUserId, contacts, loading, setActiveContact, setContacts])
 
   const updateContactWithNewMessage = (message: ChatMessage) => {
     setContacts((prev) => {
@@ -152,6 +165,7 @@ export function ChatSidebar({
         const newContact: Contact = {
           id: contactId,
           name: contactName,
+          avatar: isIncoming ? message.fromUserAvatar : message.toUserAvatar,
           lastMessage: message.content,
           lastMessageTime: chatService.formatMessageTime(message.date),
           unreadCount: isIncoming ? 1 : 0,
